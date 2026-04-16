@@ -1173,6 +1173,7 @@
   //  INIT
   // ══════════════════════════════════════════════
 
+  try { // INIT try-catch wrapper
   seedDemo();
   // Seed demo feedback if empty
   if(!feedback.length && packages.length>5){
@@ -1611,5 +1612,7 @@
     notifications.push({ text: `#${p.id} ${p.residentName} — ${p.carrier} ${p.size}`, time: p.checkinTime });
   });
   updateNotifBadge();
+
+  } catch(initErr) { console.error('INIT ERROR:', initErr); document.getElementById('appContainer').style.display='flex'; }
 
 })();
