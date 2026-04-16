@@ -99,7 +99,7 @@
   // ── CONFETTI ENGINE ──
   let cParticles=[], cFrame=null;
   function launchConfetti() {
-    const cv=document.getElementById('confettiCanvas'), cx=cv.getContext('2d');
+    const cv=document.getElementById('globalConfetti'), cx=cv.getContext('2d');
     cv.width=window.innerWidth; cv.height=window.innerHeight;
     cParticles=[];
     const colors=['#c9a84c','#dfc36e','#a08630','#e8d48b','#7c2d3d','#a0374c','#1e5fb3','#3b82f6','#ffffff','#f4f2ed'];
@@ -130,7 +130,7 @@
     cFrame=requestAnimationFrame(anim);
   }
   function stopConfetti(){if(cFrame){cancelAnimationFrame(cFrame);cFrame=null;}
-    const cv=document.getElementById('confettiCanvas');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);cParticles=[];}
+    const cv=document.getElementById('globalConfetti');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);cParticles=[];}
 
   // ══════════════════════════════════════════════
   //  CLOCK + PENDING
