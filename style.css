@@ -235,7 +235,17 @@ body {
 
 .brand-sub strong { color: var(--maroon); font-weight: 700; }
 
-/* ── ConciURGE Title ── */
+/* ── ConciURGE Logo ── */
+.header-logo-img {
+  height: 46px;
+  width: auto;
+  object-fit: contain;
+}
+
+.header-property {
+  margin-left: 0.25rem;
+}
+
 .conciurge-title {
   font-family: 'Playfair Display', serif;
   font-size: 1.8rem;
@@ -249,11 +259,6 @@ body {
   font-style: normal;
   font-weight: 800;
   letter-spacing: 0.06em;
-}
-
-.app-title-block {
-  border-left: 1px solid var(--glass-border);
-  padding-left: 1.5rem;
 }
 
 .header-status {
