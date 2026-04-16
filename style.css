@@ -237,7 +237,7 @@ body {
 
 /* ── ConciURGE Logo ── */
 .header-logo-img {
-  height: 46px;
+  height: 220px;
   width: auto;
   object-fit: contain;
 }
@@ -2429,6 +2429,12 @@ textarea:focus { outline:none; border-color: var(--gold); box-shadow: 0 0 0 3px 
 
 .carrier-card-icon { font-size: 1.4rem; }
 .carrier-card-header h3 { font-size: 1rem; font-weight: 800; color: var(--text); }
+
+.carrier-dir-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
 
 .carrier-card-body { padding: 0.5rem 0; }
 
