@@ -944,9 +944,10 @@
     })).sort((a,b) => a.value - b.value);
     Charts.hBars('chartCarrierSpeed', speedData, { color: '#c9a84c', suffix: ' hrs', labelWidth: 80 });
 
-    // Feedback + card backs
+    // Feedback + card backs + chart flips
     renderFeedback();
     populateKpiBackCards();
+    setupChartTileFlips();
 
     } catch(e) { console.error('Stats render error:', e); }
   }
@@ -1221,6 +1222,151 @@
       const trend=weekP.length>prevWeek.length?'+'+(weekP.length-prevWeek.length)+' vs last week':weekP.length<prevWeek.length?(weekP.length-prevWeek.length)+' vs last week':'Same as last week';
       el('kpiWeeklyBack').innerHTML=`<div class="kpi-back-title">Weekly Detail</div>${ln('This Week',weekP.length)}${ln('Last Week',prevWeek.length)}${ln('Trend',trend)}`;
     }
+  }
+
+  // ══════════════════════════════════════════════
+  //  CHART TILE FLIP — Dynamic injection
+  // ══════════════════════════════════════════════
+
+  let chartFlipsSetup = false;
+
+  function setupChartTileFlips() {
+    const now = new Date();
+    const pending = packages.filter(p => p.status === 'pending');
+    const pu = packages.filter(p => p.status === 'picked_up' && p.pickupTime);
+    const total = packages.length;
+
+    // Carrier stats
+    const cc = {}; packages.forEach(p => cc[p.carrier] = (cc[p.carrier] || 0) + 1);
+    const carrierEntries = Object.entries(cc).sort((a, b) => b[1] - a[1]);
+    const topCarrier = carrierEntries[0];
+
+    // Size stats
+    const sc = {}; packages.forEach(p => sc[p.size] = (sc[p.size] || 0) + 1);
+    const sizeEntries = Object.entries(sc).sort((a, b) => b[1] - a[1]);
+
+    // Staff stats
+    const stc = {}; packages.forEach(p => stc[p.loggedBy] = (stc[p.loggedBy] || 0) + 1);
+    const staffEntries = Object.entries(stc).sort((a, b) => b[1] - a[1]);
+
+    // Resident stats
+    const rc = {}; packages.forEach(p => rc[p.residentName] = (rc[p.residentName] || 0) + 1);
+    const resEntries = Object.entries(rc).sort((a, b) => b[1] - a[1]);
+
+    // Peak hour
+    const hc = new Array(24).fill(0); packages.forEach(p => hc[new Date(p.checkinTime).getHours()]++);
+    const peakH = hc.indexOf(Math.max(...hc));
+    const peakLabel = peakH === 0 ? '12 AM' : peakH < 12 ? peakH + ' AM' : peakH === 12 ? '12 PM' : (peakH - 12) + ' PM';
+
+    // Day stats
+    const dc = [0,0,0,0,0,0,0]; packages.forEach(p => dc[new Date(p.checkinTime).getDay()]++);
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    // Avg pickup
+    let avgH = 0;
+    if (pu.length) avgH = pu.reduce((s, p) => s + hBetween(p.checkinTime, p.pickupTime), 0) / pu.length;
+
+    // Carrier speed
+    const cSpeed = {}, cSpeedN = {};
+    pu.forEach(p => { cSpeed[p.carrier] = (cSpeed[p.carrier] || 0) + hBetween(p.checkinTime, p.pickupTime); cSpeedN[p.carrier] = (cSpeedN[p.carrier] || 0) + 1; });
+
+    const m = (l, v) => `<div class="chart-back-metric"><span>${l}</span><strong>${v}</strong></div>`;
+    const sec = (title, content) => `<div class="chart-back-section"><div class="chart-back-section-title">${title}</div>${content}</div>`;
+
+    // Define back content for each chart by canvas ID
+    const backs = {
+      chartVolume: {
+        title: 'Volume Analysis',
+        html: sec('14-Day Summary', m('Total this period', packages.filter(p => new Date(p.checkinTime) >= new Date(Date.now() - 14 * 86400000)).length) + m('Daily average', (packages.filter(p => new Date(p.checkinTime) >= new Date(Date.now() - 14 * 86400000)).length / 14).toFixed(1)) + m('Busiest day', days[dc.indexOf(Math.max(...dc))])) +
+          `<div class="chart-back-insight">Use this data to forecast staffing needs. If volume is trending up, consider adding a second desk attendant during peak days.</div>`
+      },
+      chartCarrier: {
+        title: 'Carrier Intelligence',
+        html: sec('Top Carriers', carrierEntries.slice(0, 5).map(([c, n]) => m(c, n + ' (' + Math.round(n / total * 100) + '%)')).join('')) +
+          sec('Pickup Speed by Carrier', Object.keys(cSpeed).map(c => m(c, (cSpeed[c] / cSpeedN[c]).toFixed(1) + ' hrs avg')).join('')) +
+          `<div class="chart-back-insight">Amazon dominates volume at most properties. If a specific carrier has issues, use the Carriers tab to call their support line directly.</div>`
+      },
+      chartHours: {
+        title: 'Peak Hours Detail',
+        html: sec('Busiest Hours', [peakH - 1, peakH, peakH + 1].filter(h => h >= 0 && h < 24).map(h => { const l = h === 0 ? '12 AM' : h < 12 ? h + ' AM' : h === 12 ? '12 PM' : (h - 12) + ' PM'; return m(l, hc[h] + ' packages'); }).join('')) +
+          sec('Recommendation', m('Peak window', peakLabel) + m('Suggested staff', hc[peakH] > 5 ? '2 desk agents' : '1 desk agent')) +
+          `<div class="chart-back-insight">Schedule your strongest team member during the peak delivery window. Most residents pick up within 2-4 hours of delivery.</div>`
+      },
+      chartDays: {
+        title: 'Weekly Pattern',
+        html: sec('Packages by Day', days.map((d, i) => m(d, dc[i] + ' packages')).join('')) +
+          `<div class="chart-back-insight">Staff heavier on your busiest days. Consider lighter coverage on slow days to manage labor costs.</div>`
+      },
+      chartSize: {
+        title: 'Size Breakdown',
+        html: sec('Distribution', sizeEntries.map(([s, n]) => m(s, n + ' (' + Math.round(n / total * 100) + '%)')).join('')) +
+          sec('Storage Impact', m('Large + Oversized', (sc['Large'] || 0) + (sc['Oversized'] || 0) + ' items') + m('% needing shelf space', Math.round(((sc['Medium'] || 0) + (sc['Large'] || 0) + (sc['Oversized'] || 0)) / total * 100) + '%')) +
+          `<div class="chart-back-insight">If Large/Oversized exceeds 20% of volume, consider dedicated overflow storage behind the desk or in the package room.</div>`
+      },
+      chartStaff: {
+        title: 'Staff Performance',
+        html: sec('Packages Logged', staffEntries.map(([s, n]) => m(s, n + ' packages')).join('')) +
+          sec('Analysis', m('Most active', staffEntries[0] ? staffEntries[0][0] : '—') + m('Avg per staff', total > 0 && staffEntries.length ? Math.round(total / staffEntries.length) : '—')) +
+          `<div class="chart-back-insight">Balanced workloads keep morale high. If one team member handles 3x more, consider redistributing shifts.</div>`
+      },
+      chartResidents: {
+        title: 'Resident Package Rates',
+        html: sec('Top Receivers', resEntries.slice(0, 8).map(([r, n]) => m(r, n + ' packages')).join('')) +
+          `<div class="chart-back-insight">High-volume residents benefit from proactive notifications. Consider a VIP package holding area for residents with 5+ weekly deliveries.</div>`
+      },
+      chartCarrierSpeed: {
+        title: 'Carrier Collection Speed',
+        html: sec('Avg Hours to Pickup', Object.keys(cSpeed).sort((a, b) => cSpeed[a] / cSpeedN[a] - cSpeed[b] / cSpeedN[b]).map(c => m(c, (cSpeed[c] / cSpeedN[c]).toFixed(1) + ' hours')).join('')) +
+          `<div class="chart-back-insight">If a carrier's packages sit longest, it may indicate delivery timing (late evening) rather than resident disinterest.</div>`
+      },
+      chartAging: {
+        title: 'Aging Analysis',
+        html: sec('Current Pending', m('Total pending', pending.length) + m('Under 6 hours', pending.filter(p => hBetween(p.checkinTime, now.toISOString()) < 6).length) + m('6-24 hours', pending.filter(p => { const h = hBetween(p.checkinTime, now.toISOString()); return h >= 6 && h < 24; }).length) + m('24-48 hours', pending.filter(p => { const h = hBetween(p.checkinTime, now.toISOString()); return h >= 24 && h < 48; }).length) + m('Over 48 hours', pending.filter(p => hBetween(p.checkinTime, now.toISOString()) >= 48).length)) +
+          `<div class="chart-back-insight">Packages sitting 48+ hours should trigger a direct call or door knock. Consider a "3-strike" policy for chronic non-collectors.</div>`
+      }
+    };
+
+    // Inject flip structure into chart tiles (only once)
+    document.querySelectorAll('#tab-stats .chart-tile:not(.feedback-tile)').forEach(tile => {
+      const canvas = tile.querySelector('canvas');
+      if (!canvas) return;
+      const canvasId = canvas.id;
+      const backData = backs[canvasId];
+      if (!backData) return;
+
+      // Only inject once
+      if (tile.querySelector('.chart-tile-inner')) {
+        // Already wrapped — just update back content
+        const backEl = tile.querySelector('.chart-back');
+        if (backEl) backEl.innerHTML = `<div class="chart-back-title">${backData.title}</div>${backData.html}`;
+        return;
+      }
+
+      // Wrap existing content
+      const front = document.createElement('div');
+      front.className = 'chart-front';
+      while (tile.firstChild) front.appendChild(tile.firstChild);
+
+      const back = document.createElement('div');
+      back.className = 'chart-back';
+      back.innerHTML = `<div class="chart-back-title">${backData.title}</div>${backData.html}`;
+
+      const inner = document.createElement('div');
+      inner.className = 'chart-tile-inner';
+      inner.appendChild(front);
+      inner.appendChild(back);
+
+      // Add hint
+      const hint = document.createElement('span');
+      hint.className = 'chart-flip-hint';
+      hint.textContent = 'tap for insights';
+
+      tile.appendChild(hint);
+      tile.appendChild(inner);
+
+      // Click to flip
+      tile.addEventListener('click', () => tile.classList.toggle('flipped'));
+    });
   }
 
   // ══════════════════════════════════════════════

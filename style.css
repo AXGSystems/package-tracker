@@ -1169,6 +1169,154 @@ input:focus, select:focus {
 .kpi-value { transition: transform 0.3s; }
 .kpi-tile:hover .kpi-value { transform: scale(1.08); }
 
+/* ══════════════════════════════════════════════
+   DYNAMIC STAT TILES — Float, Hover, Flip
+   ══════════════════════════════════════════════ */
+
+/* ── Idle floating animation (staggered) ── */
+@keyframes tileFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+.chart-tile, .kpi-tile {
+  animation: tileFloat 4s ease-in-out infinite;
+}
+
+.chart-tile:nth-child(1), .kpi-tile:nth-child(1) { animation-delay: 0s; }
+.chart-tile:nth-child(2), .kpi-tile:nth-child(2) { animation-delay: 0.5s; }
+.chart-tile:nth-child(3), .kpi-tile:nth-child(3) { animation-delay: 1s; }
+.chart-tile:nth-child(4), .kpi-tile:nth-child(4) { animation-delay: 1.5s; }
+.chart-tile:nth-child(5), .kpi-tile:nth-child(5) { animation-delay: 2s; }
+.chart-tile:nth-child(6), .kpi-tile:nth-child(6) { animation-delay: 2.5s; }
+
+/* Pause float on hover (so lift doesn't fight float) */
+.chart-tile:hover, .kpi-tile:hover { animation-play-state: paused; }
+
+/* ── Super responsive hover ── */
+.chart-tile {
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease !important;
+}
+
+.chart-tile:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.12),
+    0 0 30px rgba(201,168,76,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.7) !important;
+}
+
+.chart-tile:active {
+  transform: translateY(-2px) scale(0.99) !important;
+  transition-duration: 0.08s !important;
+}
+
+/* ── Chart tile flip ── */
+.chart-tile {
+  perspective: 1000px;
+}
+
+.chart-tile-inner {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  transition: transform 0.65s cubic-bezier(0.34,1.56,0.64,1);
+  transform-style: preserve-3d;
+}
+
+.chart-tile.flipped .chart-tile-inner {
+  transform: rotateY(180deg);
+}
+
+.chart-tile.flipped:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+}
+
+.chart-front, .chart-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.chart-front {
+  position: relative;
+}
+
+.chart-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  padding: 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-back-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--maroon);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.chart-back-section {
+  margin-bottom: 0.75rem;
+}
+
+.chart-back-section-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.chart-back-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0;
+  font-size: 0.82rem;
+  border-bottom: 1px dotted rgba(0,0,0,0.05);
+}
+
+.chart-back-metric:last-child { border-bottom: none; }
+.chart-back-metric span:first-child { color: var(--text-secondary); }
+.chart-back-metric strong { color: var(--text); font-weight: 700; }
+
+.chart-back-insight {
+  margin-top: auto;
+  padding: 0.6rem 0.8rem;
+  background: var(--gold-bg);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--r-xs) var(--r-xs) 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.chart-flip-hint {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.chart-tile:hover .chart-flip-hint { opacity: 1; }
+
+/* Full-width feedback tiles don't float */
+.feedback-tile { animation: none !important; cursor: default !important; }
+.feedback-tile:hover { transform: translateY(-4px) !important; }
+
 /* ── L4: Ripple effect on buttons ── */
 .btn { position: relative; overflow: hidden; }
 .btn .ripple {
