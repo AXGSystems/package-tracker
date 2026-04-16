@@ -1,7 +1,6 @@
 /* ══════════════════════════════════════════════════════════
-   PackageDesk v3.1 — The REMY Apartments (A LIVEBe Community)
+   ConciURGE v4.0 — The REMY Apartments (A LIVEBe Community)
    (c) AXG Systems — All Rights Reserved
-   7-Round PLFR Build
    ══════════════════════════════════════════════════════════ */
 
 (function () {
@@ -12,14 +11,15 @@
   const SHEETS_ENABLED = SHEETS_API_URL.length > 0;
 
   // ── DATA ──
-  const KEYS = { residents: 'pd_residents', packages: 'pd_packages', prefs: 'pd_prefs' };
+  const KEYS = { residents: 'pd_residents', packages: 'pd_packages', prefs: 'pd_prefs', shiftNotes: 'pd_shiftnotes' };
   function load(k)    { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } }
   function save(k, d) { localStorage.setItem(k, JSON.stringify(d)); }
   function loadObj(k)  { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch { return {}; } }
 
-  let residents = load(KEYS.residents);
-  let packages  = load(KEYS.packages);
-  let prefs     = loadObj(KEYS.prefs); // remembers staff, carrier, size
+  let residents  = load(KEYS.residents);
+  let packages   = load(KEYS.packages);
+  let prefs      = loadObj(KEYS.prefs);
+  let shiftNotes = load(KEYS.shiftNotes);
 
   function nextId() { return packages.reduce((m, p) => Math.max(m, p.id || 0), 0) + 1; }
 
@@ -565,6 +565,7 @@
     document.getElementById('statOverdue').textContent=over.length;
     document.getElementById('statAvgPickup').textContent=avg;
     document.getElementById('statTopCarrier').textContent=top?top[0]:'—';
+    document.getElementById('statLost').textContent=packages.filter(p=>p.status==='lost').length;
   }
 
   // ══════════════════════════════════════════════
@@ -578,6 +579,7 @@
     if(filter==='pending')data=data.filter(p=>p.status==='pending');
     if(filter==='picked_up')data=data.filter(p=>p.status==='picked_up');
     if(filter==='overdue')data=data.filter(p=>p.status==='pending'&&hBetween(p.checkinTime,new Date().toISOString())>=48);
+    if(filter==='lost')data=data.filter(p=>p.status==='lost');
     if(search)data=data.filter(p=>p.residentName.toLowerCase().includes(search)||p.apartment.toLowerCase().includes(search)||p.carrier.toLowerCase().includes(search)||(p.tracking||'').toLowerCase().includes(search)||(p.notes||'').toLowerCase().includes(search)||String(p.id).includes(search));
     data.sort((a,b)=>new Date(b.checkinTime)-new Date(a.checkinTime));
 
@@ -586,9 +588,19 @@
 
     tbody.innerHTML=data.map(p=>{
       const isOver=p.status==='pending'&&hBetween(p.checkinTime,new Date().toISOString())>=48;
-      let sc=p.status==='pending'?'status-pending':'status-picked-up', st=p.status==='pending'?'Pending':'Picked Up';
+      const isLost=p.status==='lost';
+      let sc='status-pending', st='Pending';
+      if(p.status==='picked_up'){sc='status-picked-up';st='Picked Up';}
       if(isOver){sc='status-overdue';st='OVERDUE';}
-      return `<tr${isOver?' style="background:rgba(220,38,38,0.03);"':''}>
+      if(isLost){sc='status-lost';st='LOST';}
+      const rowStyle=isOver?' style="background:rgba(220,38,38,0.03);"':isLost?' style="background:rgba(139,69,19,0.03);"':'';
+
+      // Action buttons
+      let actions='';
+      if(p.status==='pending') actions=`<button class="void-btn" data-void="${p.id}">Void</button> <button class="void-btn" data-lost="${p.id}" style="border-color:rgba(139,69,19,0.2);color:#8b4513;">Lost?</button>`;
+      if(isLost) actions=`<button class="void-btn" data-found="${p.id}" style="border-color:rgba(22,163,74,0.2);color:var(--success);">Found</button>`;
+
+      return `<tr${rowStyle}>
         <td><strong>#${p.id}</strong></td>
         <td>${fmtDate(p.checkinTime)}</td><td>${fmtTime(p.checkinTime)}</td>
         <td>${esc(p.residentName)}</td><td>${esc(p.apartment)}</td>
@@ -597,16 +609,29 @@
         <td><span class="status-badge ${sc}">${st}</span></td>
         <td>${p.pickupTime?fmtDate(p.pickupTime):'—'}</td><td>${p.pickupTime?fmtTime(p.pickupTime):'—'}</td>
         <td>${p.status==='picked_up'?(p.signatureMethod==='type'?esc(p.typedSignature||'—'):(p.signature?'Signed':'—')):'—'}</td>
-        <td>${p.status==='pending'?`<button class="void-btn" data-void="${p.id}">Void</button>`:''}</td>
+        <td>${actions}</td>
       </tr>`;
     }).join('');
 
-    // Void buttons (Round 5)
+    // Action buttons
     tbody.querySelectorAll('[data-void]').forEach(b=>{b.addEventListener('click',()=>{
       if(!confirm('Void this package? It will be removed.'))return;
       packages=packages.filter(p=>p.id!==Number(b.dataset.void));
       save(KEYS.packages,packages);updatePending();updateAnalytics();renderDashboard();
       toast('Package voided','warning');
+    });});
+
+    // Lost package buttons
+    tbody.querySelectorAll('[data-lost]').forEach(b=>{b.addEventListener('click',()=>{
+      openLostModal(Number(b.dataset.lost));
+    });});
+
+    // Found buttons
+    tbody.querySelectorAll('[data-found]').forEach(b=>{b.addEventListener('click',()=>{
+      const pkg=packages.find(p=>p.id===Number(b.dataset.found));
+      if(pkg){pkg.status='pending'; pkg.lostNote=null; pkg.lostAt=null;
+        save(KEYS.packages,packages);updatePending();updateAnalytics();renderDashboard();
+        toast('Package marked as found!','success');}
     });});
   }
 
@@ -672,18 +697,131 @@
   }
 
   // ══════════════════════════════════════════════
+  //  LOST PACKAGE MODAL
+  // ══════════════════════════════════════════════
+
+  let lostTargetId = null;
+
+  function openLostModal(pkgId) {
+    const pkg = packages.find(p=>p.id===pkgId);
+    if(!pkg) return;
+    lostTargetId = pkgId;
+    document.getElementById('lostPkgLabel').textContent = `#${pkg.id} — ${pkg.residentName} (${pkg.carrier} ${pkg.size})`;
+    document.getElementById('lostNoteText').value = '';
+    document.getElementById('lostModal').style.display = 'flex';
+  }
+
+  document.getElementById('lostCancelBtn').addEventListener('click',()=>{
+    document.getElementById('lostModal').style.display='none'; lostTargetId=null;
+  });
+
+  document.getElementById('lostConfirmBtn').addEventListener('click',()=>{
+    if(!lostTargetId) return;
+    const pkg=packages.find(p=>p.id===lostTargetId);
+    if(pkg){
+      pkg.status='lost';
+      pkg.lostAt=new Date().toISOString();
+      pkg.lostNote=document.getElementById('lostNoteText').value.trim()||null;
+      save(KEYS.packages,packages); updatePending(); updateAnalytics(); renderDashboard();
+      toast(`Package #${pkg.id} marked as lost`,'error');
+    }
+    document.getElementById('lostModal').style.display='none'; lostTargetId=null;
+  });
+
+  // ══════════════════════════════════════════════
+  //  SHIFT NOTES
+  // ══════════════════════════════════════════════
+
+  let shiftNoteStaff = 'Front Desk';
+
+  document.getElementById('shiftNoteStaff').addEventListener('click',e=>{
+    const b=e.target.closest('.staff-btn');if(!b)return;
+    document.querySelectorAll('#shiftNoteStaff .staff-btn').forEach(x=>x.classList.remove('selected'));
+    b.classList.add('selected'); shiftNoteStaff=b.dataset.staff;
+  });
+
+  document.getElementById('shiftNoteForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const text=document.getElementById('shiftNoteText').value.trim();
+    if(!text){toast('Write a note first','error');return;}
+    shiftNotes.unshift({
+      id: crypto.randomUUID(),
+      text,
+      from: shiftNoteStaff,
+      time: new Date().toISOString(),
+      pinned: false
+    });
+    save(KEYS.shiftNotes,shiftNotes);
+    document.getElementById('shiftNoteText').value='';
+    renderShiftNotes();
+    toast('Shift note posted','success');
+  });
+
+  function renderShiftNotes(){
+    const list=document.getElementById('shiftNotesList');
+    const empty=document.getElementById('shiftNotesEmpty');
+    if(!shiftNotes.length){list.innerHTML='';empty.style.display='block';return;}
+    empty.style.display='none';
+
+    // Pinned first, then by time
+    const sorted=[...shiftNotes].sort((a,b)=>{
+      if(a.pinned&&!b.pinned)return -1; if(!a.pinned&&b.pinned)return 1;
+      return new Date(b.time)-new Date(a.time);
+    });
+
+    list.innerHTML=sorted.map(n=>`
+      <div class="shift-note${n.pinned?' pinned':''}" data-note-id="${n.id}">
+        <div class="shift-note-header">
+          <span class="shift-note-from">${esc(n.from)}${n.pinned?' — Pinned':''}</span>
+          <span class="shift-note-time">${fmtFull(n.time)}</span>
+        </div>
+        <div class="shift-note-body">${esc(n.text)}</div>
+        <div class="shift-note-actions">
+          <button class="note-action-btn" data-pin="${n.id}">${n.pinned?'Unpin':'Pin'}</button>
+          <button class="note-action-btn" data-delnote="${n.id}">Delete</button>
+        </div>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('[data-pin]').forEach(b=>{b.addEventListener('click',()=>{
+      const note=shiftNotes.find(n=>n.id===b.dataset.pin);
+      if(note){note.pinned=!note.pinned;save(KEYS.shiftNotes,shiftNotes);renderShiftNotes();}
+    });});
+
+    list.querySelectorAll('[data-delnote]').forEach(b=>{b.addEventListener('click',()=>{
+      shiftNotes=shiftNotes.filter(n=>n.id!==b.dataset.delnote);
+      save(KEYS.shiftNotes,shiftNotes);renderShiftNotes();toast('Note deleted','warning');
+    });});
+  }
+
+  // ══════════════════════════════════════════════
+  //  CARRIER DIRECTORY — Copy to clipboard
+  // ══════════════════════════════════════════════
+
+  document.getElementById('carrierDirectory').addEventListener('click',e=>{
+    const phone=e.target.closest('[data-copy]');
+    if(!phone)return;
+    e.preventDefault();
+    navigator.clipboard.writeText(phone.dataset.copy).then(()=>{
+      toast(`Copied: ${phone.dataset.copy}`,'info');
+    }).catch(()=>{});
+  });
+
+  // ══════════════════════════════════════════════
   //  INIT
   // ══════════════════════════════════════════════
 
   seedDemo();
   renderResidents();
   renderDashboard();
+  renderShiftNotes();
   updatePending();
   updateAnalytics();
 
   document.getElementById('resetDemoBtn').addEventListener('click',()=>{
     if(!confirm('Erase all data and reload demo?'))return;
-    localStorage.removeItem(KEYS.residents);localStorage.removeItem(KEYS.packages);localStorage.removeItem(KEYS.prefs);
+    localStorage.removeItem(KEYS.residents);localStorage.removeItem(KEYS.packages);
+    localStorage.removeItem(KEYS.prefs);localStorage.removeItem(KEYS.shiftNotes);
     location.reload();
   });
 

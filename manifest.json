@@ -1,10 +1,10 @@
 {
-  "name": "PackageDesk — The REMY",
-  "short_name": "PackageDesk",
-  "description": "Concierge Delivery Tracker for The REMY Apartments",
+  "name": "ConciURGE — The REMY",
+  "short_name": "ConciURGE",
+  "description": "Concierge Delivery & Package Management for The REMY Apartments",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#f4f2ed",
-  "theme_color": "#c9a84c",
+  "theme_color": "#7c2d3d",
   "icons": []
 }
