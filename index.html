@@ -26,7 +26,7 @@
       <div class="license-logo">
         <div class="logo-mark">R</div>
         <div>
-          <h1 class="conciurge-title">Conci<span>URGE</span></h1>
+          <h1 class="conciurge-title">Conci<span>URGE</span><sup style="font-size:0.4em;font-style:normal;">&trade;</sup></h1>
           <span class="brand-sub">The REMY Apartments &middot; A <strong>LIVEBe</strong> Community</span>
         </div>
       </div>
@@ -58,7 +58,7 @@
           </div>
         </div>
         <div class="app-title-block">
-          <span class="conciurge-title">Conci<span>URGE</span></span>
+          <span class="conciurge-title">Conci<span>URGE</span><sup style="font-size:0.4em;font-style:normal;">&trade;</sup></span>
         </div>
       </div>
       <div class="header-status">
@@ -462,28 +462,28 @@
 
         <!-- Gauges -->
         <div class="stats-gauge-row">
-          <div class="gauge-flip-tile" data-gauge="gaugePickup" role="button" tabindex="0">
+          <div class="gauge-flip-tile" data-gauge="gaugePickup" role="button" tabindex="0" onclick="showTileDetail('gaugePickup')">
             <span class="chart-flip-hint">tap for insights</span>
             <div class="chart-tile-inner">
               <div class="chart-front"><h3>Same-Day Pickup Rate</h3><canvas id="gaugePickup" class="gauge-canvas"></canvas></div>
               <div class="chart-back" id="gaugePickupBack"></div>
             </div>
           </div>
-          <div class="gauge-flip-tile" data-gauge="gaugeCapacity" role="button" tabindex="0">
+          <div class="gauge-flip-tile" data-gauge="gaugeCapacity" role="button" tabindex="0" onclick="showTileDetail('gaugeCapacity')">
             <span class="chart-flip-hint">tap for insights</span>
             <div class="chart-tile-inner">
               <div class="chart-front"><h3>Daily Volume</h3><canvas id="gaugeCapacity" class="gauge-canvas"></canvas></div>
               <div class="chart-back" id="gaugeCapacityBack"></div>
             </div>
           </div>
-          <div class="gauge-flip-tile" data-gauge="gaugeFeedback" role="button" tabindex="0">
+          <div class="gauge-flip-tile" data-gauge="gaugeFeedback" role="button" tabindex="0" onclick="showTileDetail('gaugeFeedback')">
             <span class="chart-flip-hint">tap for insights</span>
             <div class="chart-tile-inner">
               <div class="chart-front"><h3>Resident Satisfaction</h3><canvas id="gaugeFeedback" class="gauge-canvas"></canvas></div>
               <div class="chart-back" id="gaugeFeedbackBack"></div>
             </div>
           </div>
-          <div class="gauge-flip-tile" data-gauge="gaugeOverdue" role="button" tabindex="0">
+          <div class="gauge-flip-tile" data-gauge="gaugeOverdue" role="button" tabindex="0" onclick="showTileDetail('gaugeOverdue')">
             <span class="chart-flip-hint">tap for insights</span>
             <div class="chart-tile-inner">
               <div class="chart-front"><h3>Overdue Alert</h3><canvas id="gaugeOverdue" class="gauge-canvas"></canvas></div>
@@ -494,14 +494,14 @@
 
         <!-- Volume + Carrier -->
         <div class="stats-chart-row">
-          <div class="chart-tile" data-chart="chartVolume" role="button" tabindex="0">
+          <div class="chart-tile" data-chart="chartVolume" role="button" tabindex="0" onclick="showTileDetail('chartVolume')">
             <span class="chart-flip-hint">tap for insights</span>
             <h3>Package Volume — Last 14 Days</h3>
             <p class="chart-subtitle">Track delivery trends to anticipate busy periods</p>
             <canvas id="chartVolume" style="width:100%;height:220px;"></canvas>
             <div class="chart-back-overlay" id="chartVolumeBack"></div>
           </div>
-          <div class="chart-tile" data-chart="chartCarrier" role="button" tabindex="0">
+          <div class="chart-tile" data-chart="chartCarrier" role="button" tabindex="0" onclick="showTileDetail('chartCarrier')">
             <span class="chart-flip-hint">tap for insights</span>
             <h3>Carrier Breakdown</h3>
             <p class="chart-subtitle">Which delivery services bring the most packages</p>
@@ -513,14 +513,14 @@
 
         <!-- Peak Hours + Day of Week -->
         <div class="stats-chart-row">
-          <div class="chart-tile" data-chart="chartHours" role="button" tabindex="0">
+          <div class="chart-tile" data-chart="chartHours" role="button" tabindex="0" onclick="showTileDetail('chartHours')">
             <span class="chart-flip-hint">tap for insights</span>
             <h3>Peak Delivery Clock</h3>
             <p class="chart-subtitle">When packages arrive — bigger wedge = more deliveries. Use to schedule desk staff.</p>
             <canvas id="chartHours" style="width:100%;height:280px;"></canvas>
             <div class="chart-back-overlay" id="chartHoursBack"></div>
           </div>
-          <div class="chart-tile" data-chart="chartDays" role="button" tabindex="0">
+          <div class="chart-tile" data-chart="chartDays" role="button" tabindex="0" onclick="showTileDetail('chartDays')">
             <span class="chart-flip-hint">tap for insights</span>
             <h3>Delivery Volume by Day</h3>
             <p class="chart-subtitle">Which days need the most staff coverage</p>
@@ -531,7 +531,7 @@
 
         <!-- Size (pie) + Staff -->
         <div class="stats-chart-row">
-          <div class="chart-tile" data-chart="chartSize" role="button" tabindex="0">
+          <div class="chart-tile" data-chart="chartSize" role="button" tabindex="0" onclick="showTileDetail('chartSize')">
             <span class="chart-flip-hint">tap for insights</span>
             <h3>Package Size Mix</h3>
             <p class="chart-subtitle">Plan storage space and shelf allocation</p>
@@ -539,7 +539,7 @@
             <div class="chart-legend" id="sizeLegend"></div>
             <div class="chart-back-overlay" id="chartSizeBack"></div>
           </div>
-          <div class="chart-tile" data-chart="chartStaff" role="button" tabindex="0">
+          <div class="chart-tile" data-chart="chartStaff" role="button" tabindex="0" onclick="showTileDetail('chartStaff')">
             <span class="chart-flip-hint">tap for insights</span>
             <h3>Staff Activity</h3>
             <p class="chart-subtitle">Packages logged per team member</p>
@@ -550,14 +550,14 @@
 
         <!-- Highest Package Rates + Carrier Speed -->
         <div class="stats-chart-row">
-          <div class="chart-tile" data-chart="chartResidents" role="button" tabindex="0">
+          <div class="chart-tile" data-chart="chartResidents" role="button" tabindex="0" onclick="showTileDetail('chartResidents')">
             <span class="chart-flip-hint">tap for insights</span>
             <h3>Highest Package Rates</h3>
             <p class="chart-subtitle">Residents with the most deliveries</p>
             <canvas id="chartResidents" style="width:100%;height:260px;"></canvas>
             <div class="chart-back-overlay" id="chartResidentsBack"></div>
           </div>
-          <div class="chart-tile" data-chart="chartCarrierSpeed" role="button" tabindex="0">
+          <div class="chart-tile" data-chart="chartCarrierSpeed" role="button" tabindex="0" onclick="showTileDetail('chartCarrierSpeed')">
             <span class="chart-flip-hint">tap for insights</span>
             <h3>Avg Pickup Time by Carrier</h3>
             <p class="chart-subtitle">How quickly residents collect each carrier's packages</p>
@@ -568,7 +568,7 @@
 
         <!-- Pending Aging (split into 2) -->
         <div class="stats-chart-row">
-          <div class="chart-tile" data-chart="chartAging" role="button" tabindex="0">
+          <div class="chart-tile" data-chart="chartAging" role="button" tabindex="0" onclick="showTileDetail('chartAging')">
             <span class="chart-flip-hint">tap for insights</span>
             <h3>Package Aging Distribution</h3>
             <p class="chart-subtitle">How long pending packages have been waiting</p>
@@ -699,7 +699,7 @@
     <div class="onboarding-overlay" id="onboardingOverlay" style="display:none;">
       <div class="onboarding-card">
         <div class="logo-mark" style="width:56px;height:56px;font-size:1.8rem;margin:0 auto 1rem;">R</div>
-        <h2 class="conciurge-title" style="font-size:2rem;">Conci<span>URGE</span></h2>
+        <h2 class="conciurge-title" style="font-size:2rem;">Conci<span>URGE</span><sup style="font-size:0.4em;font-style:normal;">&trade;</sup></h2>
         <p class="panel-desc" style="margin:0.5rem 0 1rem;">Welcome to The REMY's package management system.</p>
         <div class="onboarding-steps">
           <div class="onboarding-step"><span class="onboarding-num">1</span><span>A package arrives — tap <strong>Log</strong>, pick the resident, carrier, and size. Done in 5 seconds.</span></div>
@@ -715,7 +715,7 @@
     <div class="modal-overlay" id="aboutModal" style="display:none;">
       <div class="modal-card" style="text-align:center;max-width:440px;">
         <div class="logo-mark" style="width:52px;height:52px;font-size:1.6rem;margin:0 auto 0.75rem;">R</div>
-        <h3 class="conciurge-title" style="font-size:1.6rem;margin-bottom:0.25rem;">Conci<span>URGE</span></h3>
+        <h3 class="conciurge-title" style="font-size:1.6rem;margin-bottom:0.25rem;">Conci<span>URGE</span><sup style="font-size:0.4em;font-style:normal;">&trade;</sup></h3>
         <p class="panel-desc">Concierge Package Management System<br>The REMY Apartments &middot; A LIVEBe Community</p>
         <div style="margin:1.25rem 0;padding:1rem;background:var(--gold-bg);border-radius:var(--r-sm);font-size:0.85rem;color:var(--text-secondary);">
           <strong>Version 6.0</strong><br>

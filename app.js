@@ -1255,20 +1255,7 @@
   // ══════════════════════════════════════════════
 
   // Click handlers for gauge tiles (set up once)
-  // Gauge tiles also open the detail modal
-  document.querySelectorAll('.gauge-flip-tile').forEach(tile => {
-    tile.addEventListener('click', () => {
-      const gaugeId = tile.dataset.gauge;
-      if (!Object.keys(tileBacksData).length) { try { buildTileBacksData(); } catch(e){} }
-      // Also check gauge-specific data from populateGaugeFlipBacks
-      if (!tileBacksData[gaugeId]) { try { buildGaugeData(); } catch(e){} }
-      const data = tileBacksData[gaugeId];
-      if (!data) return;
-      document.getElementById('tileDetailTitle').textContent = data.title;
-      document.getElementById('tileDetailBody').innerHTML = data.html;
-      document.getElementById('tileDetailModal').style.display = 'flex';
-    });
-  });
+  // Gauge tiles use onclick in HTML now — no JS handler needed
 
   function populateGaugeFlipBacks() {
     const now = new Date(), today = new Date(); today.setHours(0,0,0,0);
@@ -1320,30 +1307,26 @@
   //  CHART TILE FLIP — Dynamic injection
   // ══════════════════════════════════════════════
 
-  // Chart tile click → opens detail modal
+  // Global tile detail function — called from onclick in HTML
   let tileBacksData = {};
 
-  document.querySelectorAll('.chart-tile[data-chart]').forEach(tile => {
-    tile.addEventListener('click', e => {
-      e.stopPropagation();
-      const chartId = tile.dataset.chart;
-      // Populate backs if empty
-      if (!tileBacksData[chartId]) {
-        try { buildTileBacksData(); } catch(e2) { console.warn('buildTileBacksData error:', e2); }
-        try { buildGaugeData(); } catch(e2) {}
-      }
-      const data = tileBacksData[chartId];
-      if (!data) { console.warn('No data for', chartId); return; }
-      document.getElementById('tileDetailTitle').textContent = data.title;
-      document.getElementById('tileDetailBody').innerHTML = data.html;
-      document.getElementById('tileDetailModal').style.display = 'flex';
-    });
-  });
+  window.showTileDetail = function(id) {
+    // Build data on demand
+    if (!tileBacksData[id]) {
+      try { buildTileBacksData(); } catch(e) { console.warn('buildTileBacksData:', e); }
+      try { buildGaugeData(); } catch(e) { console.warn('buildGaugeData:', e); }
+    }
+    var data = tileBacksData[id];
+    if (!data) { alert('No detail data for: ' + id); return; }
+    document.getElementById('tileDetailTitle').textContent = data.title;
+    document.getElementById('tileDetailBody').innerHTML = data.html;
+    document.getElementById('tileDetailModal').style.display = 'flex';
+  };
 
-  document.getElementById('tileDetailClose').addEventListener('click', () => {
+  document.getElementById('tileDetailClose').addEventListener('click', function() {
     document.getElementById('tileDetailModal').style.display = 'none';
   });
-  document.getElementById('tileDetailModal').addEventListener('click', e => {
+  document.getElementById('tileDetailModal').addEventListener('click', function(e) {
     if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
   });
 
