@@ -643,32 +643,19 @@ input:focus, select:focus {
   transition-duration: 0.08s;
 }
 
-.carrier-logo-box {
+.carrier-logo-img {
   width: 64px;
   height: 40px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-
-.carrier-btn:hover .carrier-logo-box {
-  transform: scale(1.18);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-}
-
-.carrier-logo-img {
-  width: 44px;
-  height: 44px;
   object-fit: contain;
-  border-radius: 8px;
   transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
 
+.carrier-logo-img.ups-logo {
+  height: 48px;
+}
+
 .carrier-btn:hover .carrier-logo-img {
-  transform: scale(1.15);
+  transform: scale(1.2);
 }
 
 .carrier-label {
