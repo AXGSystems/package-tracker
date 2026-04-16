@@ -1367,9 +1367,20 @@ input:focus, select:focus {
   z-index: 1;
 }
 
-.gauge-flip-tile canvas {
+.gauge-canvas {
+  display: block;
+  width: 100%;
+  height: 140px;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+}
+
+.gauge-flip-tile .chart-front {
+  min-height: 180px;
+}
+
+.gauge-flip-tile .chart-tile-inner {
+  min-height: 180px;
 }
 
 .gauge-flip-tile .chart-back {

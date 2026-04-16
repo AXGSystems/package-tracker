@@ -1252,8 +1252,13 @@
 
   // Click handlers for gauge tiles (set up once)
   document.querySelectorAll('.gauge-flip-tile').forEach(tile => {
-    tile.addEventListener('click', () => tile.classList.toggle('flipped'));
-    tile.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();tile.classList.toggle('flipped');} });
+    tile.addEventListener('click', () => {
+      // Populate backs on first flip if empty
+      const back = tile.querySelector('.chart-back');
+      if (back && !back.innerHTML.trim()) { try { populateGaugeFlipBacks(); } catch(e){} }
+      tile.classList.toggle('flipped');
+    });
+    tile.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();tile.click();} });
   });
 
   function populateGaugeFlipBacks() {
