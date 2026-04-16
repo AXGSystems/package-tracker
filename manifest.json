@@ -1,0 +1,10 @@
+{
+  "name": "PackageDesk — The REMY",
+  "short_name": "PackageDesk",
+  "description": "Concierge Delivery Tracker for The REMY Apartments",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f4f2ed",
+  "theme_color": "#c9a84c",
+  "icons": []
+}
