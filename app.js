@@ -572,8 +572,10 @@
     document.getElementById('statPending').textContent=pend.length;
     document.getElementById('statOverdue').textContent=over.length;
     document.getElementById('statAvgPickup').textContent=avg;
-    document.getElementById('statTopCarrier').textContent=top?top[0]:'—';
-    document.getElementById('statLost').textContent=packages.filter(p=>p.status==='lost').length;
+    const topEl=document.getElementById('statTopCarrier');
+    if(topEl) topEl.textContent=top?top[0]:'—';
+    const lostEl=document.getElementById('statLost');
+    if(lostEl) lostEl.textContent=packages.filter(p=>p.status==='lost').length;
   }
 
   // ══════════════════════════════════════════════
