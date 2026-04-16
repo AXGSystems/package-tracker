@@ -499,7 +499,7 @@ input:focus, select:focus {
 .btn-lg { padding: 0.85rem 1.5rem; font-size: 1rem; min-height: 54px; }
 .btn-xl { padding: 1rem 2rem; font-size: 1.1rem; min-height: 58px; width: 100%; border-radius: var(--r); }
 
-#logSubmit:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+/* logSubmit:disabled styles in METALLIC MAROON section */
 
 /* ══════════════════════════════════════════════
    LOG PACKAGE — Carrier Grid + Size Toggle
@@ -608,7 +608,8 @@ input:focus, select:focus {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.6rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 2.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .carrier-btn {
@@ -644,18 +645,136 @@ input:focus, select:focus {
 }
 
 .carrier-logo-img {
-  width: 64px;
-  height: 40px;
+  width: 80px;
+  height: 52px;
   object-fit: contain;
   transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
 
 .carrier-logo-img.ups-logo {
-  height: 48px;
+  height: 58px;
 }
 
 .carrier-btn:hover .carrier-logo-img {
   transform: scale(1.2);
+}
+
+/* ── Carrier tooltip on hover ── */
+.carrier-btn {
+  position: relative;
+}
+
+.carrier-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--text);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 10;
+}
+
+.carrier-btn:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ══════════════════════════════════════════════
+   METALLIC MAROON BUTTON + ANIMATED SHEEN
+   ══════════════════════════════════════════════ */
+
+.btn-metallic-maroon {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    160deg,
+    #5a1a28 0%,
+    #8b3347 20%,
+    #b04a5e 38%,
+    #d4768a 48%,
+    #b04a5e 52%,
+    #8b3347 65%,
+    #6b2638 80%,
+    #4a1220 100%
+  );
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow:
+    0 4px 20px rgba(124,45,61,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.btn-metallic-maroon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255,255,255,0.08) 35%,
+    rgba(255,255,255,0.25) 48%,
+    rgba(255,255,255,0.35) 50%,
+    rgba(255,255,255,0.25) 52%,
+    rgba(255,255,255,0.08) 65%,
+    transparent 80%
+  );
+  animation: metalSheen 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes metalSheen {
+  0%   { left: -120%; }
+  40%  { left: 160%; }
+  100% { left: 160%; }
+}
+
+.btn-metallic-maroon:hover {
+  background: linear-gradient(
+    160deg,
+    #6b2638 0%,
+    #a0374c 20%,
+    #c45a6e 38%,
+    #e88a9e 48%,
+    #c45a6e 52%,
+    #a0374c 65%,
+    #7c2d3d 80%,
+    #5a1a28 100%
+  );
+  box-shadow:
+    0 10px 36px rgba(124,45,61,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
+  transform: translateY(-4px) scale(1.02);
+}
+
+.btn-metallic-maroon:active {
+  transform: translateY(-1px) scale(0.98);
+  transition-duration: 0.08s;
+}
+
+#logSubmit:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+#logSubmit:disabled::before {
+  animation: none;
 }
 
 .carrier-label {

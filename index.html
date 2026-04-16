@@ -120,29 +120,23 @@
             </div>
             <label class="field-label">Carrier</label>
             <div class="carrier-grid" id="carrierGrid">
-              <button type="button" class="carrier-btn selected" data-carrier="Amazon">
+              <button type="button" class="carrier-btn selected" data-carrier="Amazon" data-tooltip="Amazon — amazon.com">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon" class="carrier-logo-img">
-                <span class="carrier-label">Amazon</span>
               </button>
-              <button type="button" class="carrier-btn" data-carrier="USPS">
+              <button type="button" class="carrier-btn" data-carrier="USPS" data-tooltip="USPS — usps.com">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/5/5a/USPS_-_Color_Logo.svg" alt="USPS" class="carrier-logo-img">
-                <span class="carrier-label">USPS</span>
               </button>
-              <button type="button" class="carrier-btn" data-carrier="UPS">
+              <button type="button" class="carrier-btn" data-carrier="UPS" data-tooltip="UPS — ups.com">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/UPS_Logo_Shield_2017.svg" alt="UPS" class="carrier-logo-img ups-logo">
-                <span class="carrier-label">UPS</span>
               </button>
-              <button type="button" class="carrier-btn" data-carrier="FedEx">
+              <button type="button" class="carrier-btn" data-carrier="FedEx" data-tooltip="FedEx — fedex.com">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/b/b9/FedEx_Corporation_-_2016_Logo.svg" alt="FedEx" class="carrier-logo-img">
-                <span class="carrier-label">FedEx</span>
               </button>
-              <button type="button" class="carrier-btn" data-carrier="DHL">
+              <button type="button" class="carrier-btn" data-carrier="DHL" data-tooltip="DHL Express — dhl.com">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/a/ac/DHL_Logo.svg" alt="DHL" class="carrier-logo-img">
-                <span class="carrier-label">DHL</span>
               </button>
-              <button type="button" class="carrier-btn" data-carrier="Other">
-                <svg class="carrier-logo-img" viewBox="0 0 24 24" fill="none" stroke="#8a8a9a" stroke-width="1.5" style="width:36px;height:36px;"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                <span class="carrier-label">Other</span>
+              <button type="button" class="carrier-btn" data-carrier="Other" data-tooltip="Other Carrier">
+                <svg class="carrier-logo-img" viewBox="0 0 24 24" fill="none" stroke="#8a8a9a" stroke-width="1.5" style="width:44px;height:44px;"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
               </button>
             </div>
             <label class="field-label">Size</label>
@@ -185,7 +179,7 @@
               <button type="button" class="staff-btn" data-staff="Chris P.">Chris P.</button>
               <button type="button" class="staff-btn" data-staff="Taylor K.">Taylor K.</button>
             </div>
-            <button type="submit" class="btn btn-gold btn-xl" id="logSubmit" disabled>
+            <button type="submit" class="btn btn-metallic-maroon btn-xl" id="logSubmit" disabled>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               Log Package
             </button>
