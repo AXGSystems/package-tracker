@@ -179,7 +179,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.25rem 1rem;
+  padding: 0 1rem 0 0;
   background: rgba(255,255,255,0.78);
   backdrop-filter: blur(30px) saturate(1.5);
   -webkit-backdrop-filter: blur(30px) saturate(1.5);
@@ -237,14 +237,14 @@ body {
 
 /* ── ConciURGE Logo ── */
 .header-logo-img {
-  height: 176px;
+  height: 140px;
   width: auto;
   object-fit: contain;
-  margin: -40px -10px -40px 0;
+  margin: -30px 0 -30px -8px;
 }
 
 .header-property {
-  margin-left: 0.25rem;
+  white-space: nowrap;
 }
 
 .conciurge-title {
