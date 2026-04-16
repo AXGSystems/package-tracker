@@ -494,69 +494,87 @@
 
         <!-- Volume + Carrier -->
         <div class="stats-chart-row">
-          <div class="chart-tile">
+          <div class="chart-tile" data-chart="chartVolume" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
             <h3>Package Volume — Last 14 Days</h3>
             <p class="chart-subtitle">Track delivery trends to anticipate busy periods</p>
             <canvas id="chartVolume" style="width:100%;height:220px;"></canvas>
+            <div class="chart-back-overlay" id="chartVolumeBack"></div>
           </div>
-          <div class="chart-tile">
+          <div class="chart-tile" data-chart="chartCarrier" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
             <h3>Carrier Breakdown</h3>
             <p class="chart-subtitle">Which delivery services bring the most packages</p>
             <canvas id="chartCarrier" style="width:100%;height:200px;"></canvas>
             <div class="chart-legend" id="carrierLegend"></div>
+            <div class="chart-back-overlay" id="chartCarrierBack"></div>
           </div>
         </div>
 
         <!-- Peak Hours + Day of Week -->
         <div class="stats-chart-row">
-          <div class="chart-tile">
+          <div class="chart-tile" data-chart="chartHours" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
             <h3>Peak Delivery Clock</h3>
-            <p class="chart-subtitle">When packages arrive — bigger wedge = more deliveries at that hour. Use to schedule desk staff.</p>
+            <p class="chart-subtitle">When packages arrive — bigger wedge = more deliveries. Use to schedule desk staff.</p>
             <canvas id="chartHours" style="width:100%;height:280px;"></canvas>
+            <div class="chart-back-overlay" id="chartHoursBack"></div>
           </div>
-          <div class="chart-tile" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
-            <h3 style="align-self:flex-start;width:100%;">Delivery Volume by Day</h3>
-            <p class="chart-subtitle" style="align-self:flex-start;width:100%;">Which days need the most staff coverage</p>
+          <div class="chart-tile" data-chart="chartDays" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
+            <h3>Delivery Volume by Day</h3>
+            <p class="chart-subtitle">Which days need the most staff coverage</p>
             <canvas id="chartDays" style="width:100%;height:100px;"></canvas>
+            <div class="chart-back-overlay" id="chartDaysBack"></div>
           </div>
         </div>
 
         <!-- Size (pie) + Staff -->
         <div class="stats-chart-row">
-          <div class="chart-tile">
+          <div class="chart-tile" data-chart="chartSize" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
             <h3>Package Size Mix</h3>
             <p class="chart-subtitle">Plan storage space and shelf allocation</p>
             <canvas id="chartSize" style="width:100%;height:200px;"></canvas>
             <div class="chart-legend" id="sizeLegend"></div>
+            <div class="chart-back-overlay" id="chartSizeBack"></div>
           </div>
-          <div class="chart-tile">
+          <div class="chart-tile" data-chart="chartStaff" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
             <h3>Staff Activity</h3>
             <p class="chart-subtitle">Packages logged per team member</p>
             <canvas id="chartStaff" style="width:100%;height:200px;"></canvas>
+            <div class="chart-back-overlay" id="chartStaffBack"></div>
           </div>
         </div>
 
         <!-- Highest Package Rates + Carrier Speed -->
         <div class="stats-chart-row">
-          <div class="chart-tile">
+          <div class="chart-tile" data-chart="chartResidents" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
             <h3>Highest Package Rates</h3>
             <p class="chart-subtitle">Residents with the most deliveries</p>
             <canvas id="chartResidents" style="width:100%;height:260px;"></canvas>
+            <div class="chart-back-overlay" id="chartResidentsBack"></div>
           </div>
-          <div class="chart-tile">
+          <div class="chart-tile" data-chart="chartCarrierSpeed" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
             <h3>Avg Pickup Time by Carrier</h3>
             <p class="chart-subtitle">How quickly residents collect each carrier's packages</p>
             <canvas id="chartCarrierSpeed" style="width:100%;height:260px;"></canvas>
+            <div class="chart-back-overlay" id="chartCarrierSpeedBack"></div>
           </div>
         </div>
 
         <!-- Pending Aging (split into 2) -->
         <div class="stats-chart-row">
-          <div class="chart-tile">
+          <div class="chart-tile" data-chart="chartAging" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
             <h3>Package Aging Distribution</h3>
             <p class="chart-subtitle">How long pending packages have been waiting</p>
             <canvas id="chartAging" style="width:100%;height:200px;"></canvas>
             <div class="chart-legend" id="agingLegend"></div>
+            <div class="chart-back-overlay" id="chartAgingBack"></div>
           </div>
           <div class="chart-tile">
             <h3>Packages Needing Follow-Up</h3>

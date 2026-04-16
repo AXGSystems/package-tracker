@@ -877,9 +877,6 @@
     const overdue = pending.filter(p => hBetween(p.checkinTime, now.toISOString()) >= 48);
     Charts.gauge('gaugeOverdue', overdue.length, Math.max(pending.length, 1), { color: overdue.length > 0 ? '#dc2626' : '#16a34a', label: overdue.length + '', subLabel: overdue.length ? 'need follow-up' : 'all clear' });
 
-    // ── INJECT FLIP STRUCTURE BEFORE DRAWING (prevents canvas wipe) ──
-    setupChartTileFlips();
-
     // ── VOLUME LINE — 14 DAYS ──
     const volData = [];
     for (let i = 13; i >= 0; i--) {
@@ -968,10 +965,11 @@
     })).sort((a,b) => a.value - b.value);
     Charts.hBars('chartCarrierSpeed', speedData, { color: '#c9a84c', suffix: ' hrs', labelWidth: 80 });
 
-    // Feedback + card backs + gauge flips (chart flips injected above before drawing)
+    // Feedback + card backs + all flip backs
     renderFeedback();
     populateKpiBackCards();
     populateGaugeFlipBacks();
+    setupChartTileFlips();
 
     } catch(e) { console.error('Stats render error:', e); }
   }
@@ -1313,9 +1311,19 @@
   //  CHART TILE FLIP — Dynamic injection
   // ══════════════════════════════════════════════
 
-  let chartFlipsSetup = false;
+  // Click handlers for chart tiles (one-time setup)
+  let chartClicksSetup = false;
 
   function setupChartTileFlips() {
+    // Attach click handlers once
+    if (!chartClicksSetup) {
+      document.querySelectorAll('.chart-tile[data-chart]').forEach(tile => {
+        tile.addEventListener('click', () => tile.classList.toggle('showing-back'));
+      });
+      chartClicksSetup = true;
+    }
+
+    // Populate overlay backs with current data
     const now = new Date();
     const pending = packages.filter(p => p.status === 'pending');
     const pu = packages.filter(p => p.status === 'picked_up' && p.pickupTime);
@@ -1434,46 +1442,10 @@
       }
     };
 
-    // Inject flip structure into chart tiles (only once)
-    document.querySelectorAll('#tab-stats .chart-tile:not(.feedback-tile)').forEach(tile => {
-      const canvas = tile.querySelector('canvas');
-      if (!canvas) return;
-      const canvasId = canvas.id;
-      const backData = backs[canvasId];
-      if (!backData) return;
-
-      // Only inject once
-      if (tile.querySelector('.chart-tile-inner')) {
-        // Already wrapped — just update back content
-        const backEl = tile.querySelector('.chart-back');
-        if (backEl) backEl.innerHTML = `<div class="chart-back-title">${backData.title}</div>${backData.html}`;
-        return;
-      }
-
-      // Wrap existing content
-      const front = document.createElement('div');
-      front.className = 'chart-front';
-      while (tile.firstChild) front.appendChild(tile.firstChild);
-
-      const back = document.createElement('div');
-      back.className = 'chart-back';
-      back.innerHTML = `<div class="chart-back-title">${backData.title}</div>${backData.html}`;
-
-      const inner = document.createElement('div');
-      inner.className = 'chart-tile-inner';
-      inner.appendChild(front);
-      inner.appendChild(back);
-
-      // Add hint
-      const hint = document.createElement('span');
-      hint.className = 'chart-flip-hint';
-      hint.textContent = 'tap for insights';
-
-      tile.appendChild(hint);
-      tile.appendChild(inner);
-
-      // Click to flip
-      tile.addEventListener('click', () => tile.classList.toggle('flipped'));
+    // Populate overlay backs (no DOM reparenting — canvases stay intact)
+    Object.entries(backs).forEach(([canvasId, backData]) => {
+      const el = document.getElementById(canvasId + 'Back');
+      if (el) el.innerHTML = `<div class="chart-back-title">${backData.title}</div>${backData.html}`;
     });
   }
 
