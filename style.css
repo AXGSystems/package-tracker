@@ -697,22 +697,25 @@ input:focus, select:focus {
   overflow: hidden;
   background: linear-gradient(
     160deg,
-    #5a1a28 0%,
-    #8b3347 20%,
-    #b04a5e 38%,
-    #d4768a 48%,
-    #b04a5e 52%,
-    #8b3347 65%,
-    #6b2638 80%,
-    #4a1220 100%
+    #1e060c 0%,
+    #3a0f1a 15%,
+    #5c1525 30%,
+    #7a2035 42%,
+    #8f2a42 48%,
+    #7a2035 52%,
+    #5c1525 62%,
+    #3a0f1a 78%,
+    #1e060c 100%
   );
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.12);
+  color: #f0d0d8;
+  border: 1px solid rgba(255,255,255,0.08);
   box-shadow:
-    0 4px 20px rgba(124,45,61,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.2),
-    inset 0 -1px 0 rgba(0,0,0,0.2);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    0 4px 24px rgba(60,15,26,0.6),
+    0 1px 4px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    inset 0 -1px 0 rgba(0,0,0,0.4);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  letter-spacing: 0.03em;
 }
 
 .btn-metallic-maroon::before {
@@ -720,19 +723,19 @@ input:focus, select:focus {
   position: absolute;
   top: 0;
   left: -120%;
-  width: 60%;
+  width: 50%;
   height: 100%;
   background: linear-gradient(
     105deg,
-    transparent 20%,
-    rgba(255,255,255,0.08) 35%,
-    rgba(255,255,255,0.25) 48%,
-    rgba(255,255,255,0.35) 50%,
-    rgba(255,255,255,0.25) 52%,
-    rgba(255,255,255,0.08) 65%,
-    transparent 80%
+    transparent 25%,
+    rgba(255,180,200,0.04) 38%,
+    rgba(255,200,215,0.12) 47%,
+    rgba(255,220,230,0.18) 50%,
+    rgba(255,200,215,0.12) 53%,
+    rgba(255,180,200,0.04) 62%,
+    transparent 75%
   );
-  animation: metalSheen 3.5s ease-in-out infinite;
+  animation: metalSheen 4s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -745,19 +748,21 @@ input:focus, select:focus {
 .btn-metallic-maroon:hover {
   background: linear-gradient(
     160deg,
-    #6b2638 0%,
-    #a0374c 20%,
-    #c45a6e 38%,
-    #e88a9e 48%,
-    #c45a6e 52%,
-    #a0374c 65%,
-    #7c2d3d 80%,
-    #5a1a28 100%
+    #2a0a12 0%,
+    #4d1422 15%,
+    #6e1c30 30%,
+    #8f2a42 42%,
+    #a33350 48%,
+    #8f2a42 52%,
+    #6e1c30 62%,
+    #4d1422 78%,
+    #2a0a12 100%
   );
   box-shadow:
-    0 10px 36px rgba(124,45,61,0.45),
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    inset 0 -1px 0 rgba(0,0,0,0.2);
+    0 12px 40px rgba(60,15,26,0.7),
+    0 2px 6px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 -1px 0 rgba(0,0,0,0.4);
   transform: translateY(-4px) scale(1.02);
 }
 
