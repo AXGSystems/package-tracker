@@ -942,6 +942,203 @@ input:focus, select:focus {
 }
 
 /* ══════════════════════════════════════════════
+   7-RUN PLFR — Card Flips, Focus, Transitions
+   ══════════════════════════════════════════════ */
+
+/* ── Run 2: KPI Card Flip ── */
+.kpi-tile {
+  perspective: 800px;
+  cursor: pointer;
+}
+
+.kpi-tile-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  transform-style: preserve-3d;
+}
+
+.kpi-tile.flipped .kpi-tile-inner { transform: rotateY(180deg); }
+
+.kpi-front, .kpi-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.kpi-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.kpi-back-title {
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.kpi-back-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.15rem 0;
+  border-bottom: 1px dotted rgba(0,0,0,0.06);
+  font-size: 0.75rem;
+}
+
+.kpi-back-line:last-child { border-bottom: none; }
+
+.kpi-flip-hint {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.kpi-tile:hover .kpi-flip-hint { opacity: 1; }
+
+/* ── Run 3: Focus rings (accessibility) ── */
+.tab-btn:focus-visible,
+.carrier-btn:focus-visible,
+.chip:focus-visible,
+.staff-btn:focus-visible,
+.size-btn:focus-visible,
+.btn:focus-visible,
+.pkg-item:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ── Run 6: Tab panel fade transition ── */
+.tab-panel {
+  animation: none;
+}
+
+.tab-panel.active {
+  animation: tabFadeIn 0.3s ease;
+}
+
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Run 5: Sync status indicator ── */
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.35rem;
+  vertical-align: middle;
+}
+.sync-dot.online { background: var(--success); }
+.sync-dot.offline { background: var(--danger); }
+
+/* ── Run 5: Onboarding overlay ── */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,15,25,0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 996;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.onboarding-card {
+  background: var(--glass-heavy);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: var(--r);
+  padding: 2.5rem;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-xl);
+}
+
+.onboarding-card h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.onboarding-steps {
+  text-align: left;
+  margin: 1.25rem 0;
+}
+
+.onboarding-step {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.onboarding-num {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: var(--maroon);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+/* ── Run 7: Sellability — copyright bar, about link ── */
+.copyright-bar {
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.help-link {
+  color: var(--maroon);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.help-link:hover { text-decoration: underline; }
+
+/* ── Run 4: Mobile minimum font floor ── */
+@media (max-width: 767px) {
+  .chip { font-size: 0.82rem; min-height: 40px; }
+  .carrier-label { font-size: 0.72rem; }
+  .chart-subtitle { font-size: 0.78rem; }
+  .kpi-value { font-size: 1.4rem; }
+  .stats-kpi-6 { grid-template-columns: repeat(3, 1fr); }
+  .stats-chart-3 { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════
    SUPER GLASSMORPHIC PANEL OVERHAUL
    ══════════════════════════════════════════════ */
 

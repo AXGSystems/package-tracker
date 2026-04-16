@@ -931,8 +931,9 @@
     })).sort((a,b) => a.value - b.value);
     Charts.hBars('chartCarrierSpeed', speedData, { color: '#c9a84c', suffix: ' hrs', labelWidth: 80 });
 
-    // Feedback
+    // Feedback + card backs
     renderFeedback();
+    populateKpiBackCards();
 
     } catch(e) { console.error('Stats render error:', e); }
   }
@@ -1150,6 +1151,75 @@
     localStorage.removeItem(KEYS.prefs);localStorage.removeItem(KEYS.shiftNotes);
     localStorage.removeItem(KEYS.feedback);
     location.reload();
+  });
+
+  // ══════════════════════════════════════════════
+  //  KPI CARD FLIP (Run 2)
+  // ══════════════════════════════════════════════
+
+  document.querySelectorAll('.kpi-tile[data-kpi]').forEach(tile => {
+    tile.addEventListener('click', () => tile.classList.toggle('flipped'));
+    tile.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();tile.classList.toggle('flipped');} });
+  });
+
+  function populateKpiBackCards() {
+    const now=new Date(), today=new Date(); today.setHours(0,0,0,0);
+    const weekAgo=new Date(now.getTime()-7*86400000);
+    const monthAgo=new Date(now.getTime()-30*86400000);
+    const todayP=packages.filter(p=>new Date(p.checkinTime)>=today);
+    const weekP=packages.filter(p=>new Date(p.checkinTime)>=weekAgo);
+    const monthP=packages.filter(p=>new Date(p.checkinTime)>=monthAgo);
+    const pending=packages.filter(p=>p.status==='pending');
+    const pu=packages.filter(p=>p.status==='picked_up'&&p.pickupTime);
+    const lost=packages.filter(p=>p.status==='lost');
+    const overdue=pending.filter(p=>hBetween(p.checkinTime,now.toISOString())>=48);
+    const sameDayPU=pu.filter(p=>{const ci=new Date(p.checkinTime);ci.setHours(0,0,0,0);const po=new Date(p.pickupTime);po.setHours(0,0,0,0);return ci.getTime()===po.getTime();});
+
+    const ln=(l,v)=>`<div class="kpi-back-line"><span>${l}</span><strong>${v}</strong></div>`;
+
+    const el=id=>document.getElementById(id);
+    if(el('kpiTotalBack')) el('kpiTotalBack').innerHTML=`<div class="kpi-back-title">Breakdown</div>${ln('Picked Up',pu.length)}${ln('Pending',pending.length)}${ln('Lost',lost.length)}${ln('This Month',monthP.length)}`;
+    if(el('kpiTodayBack')) el('kpiTodayBack').innerHTML=`<div class="kpi-back-title">Today Detail</div>${ln('Logged',todayP.length)}${ln('Picked Up Today',todayP.filter(p=>p.status==='picked_up').length)}${ln('Still Pending',todayP.filter(p=>p.status==='pending').length)}`;
+    if(el('kpiPendingBack')){
+      const oldest=pending.length?Math.round(hBetween(pending.sort((a,b)=>new Date(a.checkinTime)-new Date(b.checkinTime))[0].checkinTime,now.toISOString()))+'h':'—';
+      el('kpiPendingBack').innerHTML=`<div class="kpi-back-title">Pending Detail</div>${ln('Overdue (48h+)',overdue.length)}${ln('Oldest Package',oldest)}${ln('Lost/Missing',lost.length)}`;
+    }
+    if(el('kpiRateBack')) el('kpiRateBack').innerHTML=`<div class="kpi-back-title">Pickup Speed</div>${ln('Same-Day',sameDayPU.length)}${ln('Total Picked Up',pu.length)}${ln('Rate',pu.length?Math.round(sameDayPU.length/pu.length*100)+'%':'—')}`;
+    if(el('kpiAvgBack')){
+      let fast='—',slow='—';
+      if(pu.length){const sorted=[...pu].sort((a,b)=>hBetween(a.checkinTime,a.pickupTime)-hBetween(b.checkinTime,b.pickupTime));
+        const fh=hBetween(sorted[0].checkinTime,sorted[0].pickupTime);fast=fh<1?Math.round(fh*60)+'m':fh.toFixed(1)+'h';
+        const sh=hBetween(sorted[sorted.length-1].checkinTime,sorted[sorted.length-1].pickupTime);slow=sh<24?sh.toFixed(1)+'h':(sh/24).toFixed(1)+'d';}
+      el('kpiAvgBack').innerHTML=`<div class="kpi-back-title">Pickup Times</div>${ln('Fastest',fast)}${ln('Slowest',slow)}${ln('Total Pickups',pu.length)}`;
+    }
+    if(el('kpiWeeklyBack')){
+      const prevWeek=packages.filter(p=>{const t=new Date(p.checkinTime);return t>=new Date(now.getTime()-14*86400000)&&t<weekAgo;});
+      const trend=weekP.length>prevWeek.length?'+'+(weekP.length-prevWeek.length)+' vs last week':weekP.length<prevWeek.length?(weekP.length-prevWeek.length)+' vs last week':'Same as last week';
+      el('kpiWeeklyBack').innerHTML=`<div class="kpi-back-title">Weekly Detail</div>${ln('This Week',weekP.length)}${ln('Last Week',prevWeek.length)}${ln('Trend',trend)}`;
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  //  ONBOARDING (Run 5) — first visit only
+  // ══════════════════════════════════════════════
+
+  if(!localStorage.getItem('pd_onboarded')){
+    document.getElementById('onboardingOverlay').style.display='flex';
+  }
+  document.getElementById('onboardingDismiss').addEventListener('click',()=>{
+    document.getElementById('onboardingOverlay').style.display='none';
+    localStorage.setItem('pd_onboarded','1');
+  });
+
+  // ══════════════════════════════════════════════
+  //  ABOUT MODAL (Run 7)
+  // ══════════════════════════════════════════════
+
+  document.getElementById('showAboutBtn').addEventListener('click',()=>{
+    document.getElementById('aboutModal').style.display='flex';
+  });
+  document.getElementById('aboutCloseBtn').addEventListener('click',()=>{
+    document.getElementById('aboutModal').style.display='none';
   });
 
 })();

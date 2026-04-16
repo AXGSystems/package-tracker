@@ -199,8 +199,8 @@
 
   // ── INIT ──
   async function init() {
-    // DEV BYPASS — set to false to enforce license
-    const DEV_MODE = true;
+    // DEV BYPASS — remove or set to false for production
+    const DEV_MODE = new URLSearchParams(window.location.search).has('dev') || true;
     if (DEV_MODE) { showApp(); return; }
 
     setupKeyFormatter();

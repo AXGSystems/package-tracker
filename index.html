@@ -113,7 +113,7 @@
           <form id="logForm" autocomplete="off">
             <label class="field-label">Who's it for?</label>
             <div class="resident-search-wrap">
-              <input type="text" id="residentSearch" class="select-lg" placeholder="Search resident name or apartment...">
+              <input type="text" id="residentSearch" class="select-lg" placeholder="Search resident name or apartment..." aria-label="Search for a resident" role="combobox" aria-expanded="false" autocomplete="off">
               <div class="resident-dropdown" id="residentDropdown"></div>
               <input type="hidden" id="log-resident-id">
             </div>
@@ -385,35 +385,71 @@
 
         <!-- KPI Tiles -->
         <div class="stats-kpi-row stats-kpi-6">
-          <div class="kpi-tile kpi-gold" title="All packages ever logged in the system">
-            <div class="kpi-value" id="kpiTotal">0</div>
-            <div class="kpi-label">Total Packages</div>
-            <div class="kpi-sub">All time</div>
+          <div class="kpi-tile kpi-gold" data-kpi="total" role="button" tabindex="0" aria-label="Total Packages — click for details">
+            <span class="kpi-flip-hint">tap for detail</span>
+            <div class="kpi-tile-inner">
+              <div class="kpi-front">
+                <div class="kpi-value" id="kpiTotal">0</div>
+                <div class="kpi-label">Total Packages</div>
+                <div class="kpi-sub">All time</div>
+              </div>
+              <div class="kpi-back" id="kpiTotalBack"></div>
+            </div>
           </div>
-          <div class="kpi-tile kpi-blue" title="Packages logged so far today">
-            <div class="kpi-value" id="kpiToday2">0</div>
-            <div class="kpi-label">Today</div>
-            <div class="kpi-sub">Logged today</div>
+          <div class="kpi-tile kpi-blue" data-kpi="today" role="button" tabindex="0" aria-label="Today — click for details">
+            <span class="kpi-flip-hint">tap for detail</span>
+            <div class="kpi-tile-inner">
+              <div class="kpi-front">
+                <div class="kpi-value" id="kpiToday2">0</div>
+                <div class="kpi-label">Today</div>
+                <div class="kpi-sub">Logged today</div>
+              </div>
+              <div class="kpi-back" id="kpiTodayBack"></div>
+            </div>
           </div>
-          <div class="kpi-tile kpi-maroon" title="Packages currently at the front desk">
-            <div class="kpi-value" id="kpiPending2">0</div>
-            <div class="kpi-label">At Front Desk</div>
-            <div class="kpi-sub">Awaiting pickup</div>
+          <div class="kpi-tile kpi-maroon" data-kpi="pending" role="button" tabindex="0" aria-label="At Front Desk — click for details">
+            <span class="kpi-flip-hint">tap for detail</span>
+            <div class="kpi-tile-inner">
+              <div class="kpi-front">
+                <div class="kpi-value" id="kpiPending2">0</div>
+                <div class="kpi-label">At Front Desk</div>
+                <div class="kpi-sub">Awaiting pickup</div>
+              </div>
+              <div class="kpi-back" id="kpiPendingBack"></div>
+            </div>
           </div>
-          <div class="kpi-tile kpi-green" title="Percentage of packages picked up the same day they arrived">
-            <div class="kpi-value" id="kpiPickupRate">0%</div>
-            <div class="kpi-label">Same-Day Rate</div>
-            <div class="kpi-sub">Picked up same day</div>
+          <div class="kpi-tile kpi-green" data-kpi="rate" role="button" tabindex="0" aria-label="Same-Day Rate — click for details">
+            <span class="kpi-flip-hint">tap for detail</span>
+            <div class="kpi-tile-inner">
+              <div class="kpi-front">
+                <div class="kpi-value" id="kpiPickupRate">0%</div>
+                <div class="kpi-label">Same-Day Rate</div>
+                <div class="kpi-sub">Picked up same day</div>
+              </div>
+              <div class="kpi-back" id="kpiRateBack"></div>
+            </div>
           </div>
-          <div class="kpi-tile kpi-purple" title="Average time from delivery to resident pickup">
-            <div class="kpi-value" id="kpiAvg2">—</div>
-            <div class="kpi-label">Avg Pickup</div>
-            <div class="kpi-sub">Delivery to pickup</div>
+          <div class="kpi-tile kpi-purple" data-kpi="avg" role="button" tabindex="0" aria-label="Average Pickup — click for details">
+            <span class="kpi-flip-hint">tap for detail</span>
+            <div class="kpi-tile-inner">
+              <div class="kpi-front">
+                <div class="kpi-value" id="kpiAvg2">—</div>
+                <div class="kpi-label">Avg Pickup</div>
+                <div class="kpi-sub">Delivery to pickup</div>
+              </div>
+              <div class="kpi-back" id="kpiAvgBack"></div>
+            </div>
           </div>
-          <div class="kpi-tile kpi-orange" title="Total packages in the last 7 days">
-            <div class="kpi-value" id="kpiWeekly">0</div>
-            <div class="kpi-label">This Week</div>
-            <div class="kpi-sub">Last 7 days</div>
+          <div class="kpi-tile kpi-orange" data-kpi="weekly" role="button" tabindex="0" aria-label="This Week — click for details">
+            <span class="kpi-flip-hint">tap for detail</span>
+            <div class="kpi-tile-inner">
+              <div class="kpi-front">
+                <div class="kpi-value" id="kpiWeekly">0</div>
+                <div class="kpi-label">This Week</div>
+                <div class="kpi-sub">Last 7 days</div>
+              </div>
+              <div class="kpi-back" id="kpiWeeklyBack"></div>
+            </div>
           </div>
         </div>
 
@@ -592,10 +628,47 @@
       </div>
       <div class="footer-right">
         <span class="license-info" id="licenseInfo"></span>
-        <span class="version-stamp">v5.0</span>
+        <span class="version-stamp">v6.0</span>
+        <span class="help-link" id="showAboutBtn">About</span>
         <button class="btn btn-ghost" id="resetDemoBtn">Reset Demo</button>
       </div>
     </footer>
+    <div class="copyright-bar">&copy; 2026 AXG Systems. All Rights Reserved. ConciURGE&trade; is a proprietary product of AXG Systems.</div>
+
+    <!-- Onboarding (first visit) -->
+    <div class="onboarding-overlay" id="onboardingOverlay" style="display:none;">
+      <div class="onboarding-card">
+        <div class="logo-mark" style="width:56px;height:56px;font-size:1.8rem;margin:0 auto 1rem;">R</div>
+        <h2 class="conciurge-title" style="font-size:2rem;">Conci<span>URGE</span></h2>
+        <p class="panel-desc" style="margin:0.5rem 0 1rem;">Welcome to The REMY's package management system.</p>
+        <div class="onboarding-steps">
+          <div class="onboarding-step"><span class="onboarding-num">1</span><span>A package arrives — tap <strong>Log</strong>, pick the resident, carrier, and size. Done in 5 seconds.</span></div>
+          <div class="onboarding-step"><span class="onboarding-num">2</span><span>Resident comes to collect — tap <strong>Pickup</strong>, find their name, have them sign.</span></div>
+          <div class="onboarding-step"><span class="onboarding-num">3</span><span>Check <strong>Log Book</strong> for the full spreadsheet. <strong>Stats</strong> for analytics. <strong>Shift Notes</strong> to message the next shift.</span></div>
+          <div class="onboarding-step"><span class="onboarding-num">4</span><span><strong>Carriers</strong> has all the phone numbers. <strong>Residents</strong> is your directory.</span></div>
+        </div>
+        <button class="btn btn-gold btn-xl" id="onboardingDismiss">Get Started</button>
+      </div>
+    </div>
+
+    <!-- About Modal -->
+    <div class="modal-overlay" id="aboutModal" style="display:none;">
+      <div class="modal-card" style="text-align:center;max-width:440px;">
+        <div class="logo-mark" style="width:52px;height:52px;font-size:1.6rem;margin:0 auto 0.75rem;">R</div>
+        <h3 class="conciurge-title" style="font-size:1.6rem;margin-bottom:0.25rem;">Conci<span>URGE</span></h3>
+        <p class="panel-desc">Concierge Package Management System<br>The REMY Apartments &middot; A LIVEBe Community</p>
+        <div style="margin:1.25rem 0;padding:1rem;background:var(--gold-bg);border-radius:var(--r-sm);font-size:0.85rem;color:var(--text-secondary);">
+          <strong>Version 6.0</strong><br>
+          Package logging, pickup tracking, shift notes, carrier directory, analytics dashboard, report generation, resident feedback.
+        </div>
+        <div class="footer-powered" style="margin:1rem 0 0.5rem;">
+          <span class="footer-label">Powered &amp; Designed by</span>
+          <span class="footer-brand" style="font-size:1rem;">AXG SYSTEMS</span>
+        </div>
+        <p style="font-size:0.7rem;color:var(--text-dim);margin-bottom:1rem;">&copy; 2026 AXG Systems. All Rights Reserved.<br>ConciURGE&trade; is proprietary software. Unauthorized reproduction prohibited.</p>
+        <button class="btn btn-outline" id="aboutCloseBtn">Close</button>
+      </div>
+    </div>
 
     <!-- Standalone confetti canvas (always visible layer, no pointer events) -->
     <canvas id="globalConfetti" style="position:fixed;inset:0;width:100%;height:100%;z-index:997;pointer-events:none;"></canvas>
