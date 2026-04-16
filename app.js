@@ -862,62 +862,63 @@
     }
 
     // ── KPI TILES ──
-    document.getElementById('kpiTotal').textContent = packages.length;
-    document.getElementById('kpiToday2').textContent = todayPkgs.length;
-    document.getElementById('kpiPending2').textContent = pending.length;
-    document.getElementById('kpiPickupRate').textContent = rate + '%';
-    document.getElementById('kpiAvg2').textContent = avgLabel;
-    document.getElementById('kpiWeekly').textContent = weekPkgs.length;
+    try {
+      document.getElementById('kpiTotal').textContent = packages.length;
+      document.getElementById('kpiToday2').textContent = todayPkgs.length;
+      document.getElementById('kpiPending2').textContent = pending.length;
+      document.getElementById('kpiPickupRate').textContent = rate + '%';
+      document.getElementById('kpiAvg2').textContent = avgLabel;
+      document.getElementById('kpiWeekly').textContent = weekPkgs.length;
+    } catch(e) { console.warn('KPI error:', e); }
 
     // ── GAUGES ──
-    Charts.gauge('gaugePickup', rate, 100, { color: '#16a34a', subLabel: 'Same-day' });
-    Charts.gauge('gaugeCapacity', todayPkgs.length, Math.max(todayPkgs.length, 20), { color: '#1e5fb3', label: todayPkgs.length + '', subLabel: 'packages today' });
-    const fbAvg = feedback.length ? (feedback.reduce((s,f)=>s+f.rating,0)/feedback.length) : 0;
-    Charts.gauge('gaugeFeedback', fbAvg, 5, { color: '#c9a84c', label: fbAvg ? fbAvg.toFixed(1) + '/5' : '—', subLabel: feedback.length + ' reviews' });
-    const overdue = pending.filter(p => hBetween(p.checkinTime, now.toISOString()) >= 48);
-    Charts.gauge('gaugeOverdue', overdue.length, Math.max(pending.length, 1), { color: overdue.length > 0 ? '#dc2626' : '#16a34a', label: overdue.length + '', subLabel: overdue.length ? 'need follow-up' : 'all clear' });
+    try {
+      Charts.gauge('gaugePickup', rate, 100, { color: '#16a34a', subLabel: 'Same-day' });
+      Charts.gauge('gaugeCapacity', todayPkgs.length, Math.max(todayPkgs.length, 20), { color: '#1e5fb3', label: todayPkgs.length + '', subLabel: 'packages today' });
+      const fbAvg = feedback.length ? (feedback.reduce((s,f)=>s+f.rating,0)/feedback.length) : 0;
+      Charts.gauge('gaugeFeedback', fbAvg, 5, { color: '#c9a84c', label: fbAvg ? fbAvg.toFixed(1) + '/5' : '—', subLabel: feedback.length + ' reviews' });
+      const overdue = pending.filter(p => hBetween(p.checkinTime, now.toISOString()) >= 48);
+      Charts.gauge('gaugeOverdue', overdue.length, Math.max(pending.length, 1), { color: overdue.length > 0 ? '#dc2626' : '#16a34a', label: overdue.length + '', subLabel: overdue.length ? 'need follow-up' : 'all clear' });
+    } catch(e) { console.warn('Gauge error:', e); }
 
-    // ── VOLUME LINE — 14 DAYS ──
-    const volData = [];
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
-      const next = new Date(d); next.setDate(next.getDate() + 1);
-      const count = packages.filter(p => { const t = new Date(p.checkinTime); return t >= d && t < next; }).length;
-      volData.push({ label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), value: count });
-    }
-    Charts.line('chartVolume', volData, { color: '#c9a84c' });
+    // Each chart section wrapped so one crash doesn't kill the rest
+    try { // VOLUME
+      const volData = [];
+      for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0); const next = new Date(d); next.setDate(next.getDate() + 1); volData.push({ label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), value: packages.filter(p => { const t = new Date(p.checkinTime); return t >= d && t < next; }).length }); }
+      Charts.line('chartVolume', volData, { color: '#c9a84c' });
+    } catch(e) { console.warn('Volume chart error:', e); }
 
-    // ── CARRIER DONUT ──
-    const cc = {};
-    packages.forEach(p => cc[p.carrier] = (cc[p.carrier] || 0) + 1);
-    Charts.donut('chartCarrier', Object.entries(cc).sort((a,b)=>b[1]-a[1]).map(([label,value])=>({label,value})), { centerLabel: 'Packages' });
+    try { // CARRIER
+      const cc = {}; packages.forEach(p => cc[p.carrier] = (cc[p.carrier] || 0) + 1);
+      Charts.donut('chartCarrier', Object.entries(cc).sort((a,b)=>b[1]-a[1]).map(([label,value])=>({label,value})), { centerLabel: 'Packages' });
+    } catch(e) { console.warn('Carrier chart error:', e); }
 
-    // ── PEAK DELIVERY CLOCK ──
-    const hourCounts = new Array(24).fill(0);
-    packages.forEach(p => { hourCounts[new Date(p.checkinTime).getHours()]++; });
-    Charts.clockFace('chartHours', hourCounts);
+    try { // PEAK HOURS
+      const hourCounts = new Array(24).fill(0); packages.forEach(p => { hourCounts[new Date(p.checkinTime).getHours()]++; });
+      Charts.clockFace('chartHours', hourCounts);
+    } catch(e) { console.warn('Hours chart error:', e); }
 
-    // ── DAY OF WEEK HEATMAP ──
-    const dayCount = [0,0,0,0,0,0,0];
-    packages.forEach(p => { dayCount[new Date(p.checkinTime).getDay()]++; });
-    Charts.heatmap('chartDays', ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((l,i)=>({label:l,value:dayCount[i]})));
+    try { // DAY OF WEEK
+      const dayCount = [0,0,0,0,0,0,0]; packages.forEach(p => { dayCount[new Date(p.checkinTime).getDay()]++; });
+      Charts.heatmap('chartDays', ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((l,i)=>({label:l,value:dayCount[i]})));
+    } catch(e) { console.warn('Days chart error:', e); }
 
-    // ── SIZE PIE ──
-    const sc = {};
-    packages.forEach(p => sc[p.size] = (sc[p.size] || 0) + 1);
-    Charts.donut('chartSize', ['Envelope','Small','Medium','Large','Oversized'].filter(s=>sc[s]).map(s=>({label:s,value:sc[s]||0})), { centerLabel: 'Sizes' });
+    try { // SIZE
+      const sc = {}; packages.forEach(p => sc[p.size] = (sc[p.size] || 0) + 1);
+      Charts.donut('chartSize', ['Envelope','Small','Medium','Large','Oversized'].filter(s=>sc[s]).map(s=>({label:s,value:sc[s]||0})), { centerLabel: 'Sizes' });
+    } catch(e) { console.warn('Size chart error:', e); }
 
-    // ── STAFF ACTIVITY ──
-    const staffCounts = {};
-    packages.forEach(p => { staffCounts[p.loggedBy] = (staffCounts[p.loggedBy] || 0) + 1; });
-    Charts.hBars('chartStaff', Object.entries(staffCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value})), { color: '#1e5fb3', suffix: ' pkgs' });
+    try { // STAFF
+      const staffCounts = {}; packages.forEach(p => { staffCounts[p.loggedBy] = (staffCounts[p.loggedBy] || 0) + 1; });
+      Charts.hBars('chartStaff', Object.entries(staffCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value})), { color: '#1e5fb3', suffix: ' pkgs' });
+    } catch(e) { console.warn('Staff chart error:', e); }
 
-    // ── BUSIEST RESIDENTS ──
-    const resCounts = {};
-    packages.forEach(p => { resCounts[p.residentName] = (resCounts[p.residentName] || 0) + 1; });
-    Charts.hBars('chartResidents', Object.entries(resCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value})), { color: '#7c2d3d', suffix: ' pkgs', labelWidth: 130 });
+    try { // RESIDENTS
+      const resCounts = {}; packages.forEach(p => { resCounts[p.residentName] = (resCounts[p.residentName] || 0) + 1; });
+      Charts.hBars('chartResidents', Object.entries(resCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value})), { color: '#7c2d3d', suffix: ' pkgs', labelWidth: 130 });
+    } catch(e) { console.warn('Residents chart error:', e); }
 
-    // ── PENDING AGING ──
+    try { // PENDING AGING
     const agingBuckets = { '< 2h': 0, '2-6h': 0, '6-12h': 0, '12-24h': 0, '1-2 days': 0, '2+ days': 0 };
     pending.forEach(p => {
       const h = hBetween(p.checkinTime, now.toISOString());
@@ -950,8 +951,9 @@
         agingListEl.innerHTML = '<p class="empty-state" style="padding:1.5rem;">All packages under 12 hours — no follow-up needed!</p>';
       }
     }
+    } catch(e) { console.warn('Aging error:', e); }
 
-    // ── CARRIER PICKUP SPEED ──
+    try { // CARRIER SPEED
     const carrierSpeed = {};
     const carrierSpeedCount = {};
     pu.forEach(p => {
@@ -964,6 +966,7 @@
       value: Math.round(carrierSpeed[c] / carrierSpeedCount[c] * 10) / 10
     })).sort((a,b) => a.value - b.value);
     Charts.hBars('chartCarrierSpeed', speedData, { color: '#c9a84c', suffix: ' hrs', labelWidth: 80 });
+    } catch(e) { console.warn('Speed error:', e); }
 
     // Feedback + card backs + tile data
     renderFeedback();
