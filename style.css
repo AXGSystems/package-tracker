@@ -1191,7 +1191,13 @@ input:focus, select:focus {
 }
 
 .stats-kpi-6 { grid-template-columns: repeat(6, 1fr); }
-.stats-chart-3 { grid-template-columns: repeat(3, 1fr); }
+
+.stats-gauge-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
 
 .chart-subtitle {
   font-size: 0.75rem;
@@ -2134,7 +2140,8 @@ textarea:focus { outline:none; border-color: var(--gold); box-shadow: 0 0 0 3px 
   .carrier-directory { grid-template-columns: 1fr; }
   .stats-kpi-row { grid-template-columns: repeat(2, 1fr); }
   .stats-kpi-6 { grid-template-columns: repeat(3, 1fr); }
-  .stats-chart-row, .stats-chart-3 { grid-template-columns: 1fr; }
+  .stats-gauge-row { grid-template-columns: repeat(2, 1fr); }
+  .stats-chart-row { grid-template-columns: 1fr; }
   .chart-tile-wide { grid-column: span 1; }
   .kpi-value { font-size: 1.6rem; }
   .header-status { justify-content: center; flex-wrap: wrap; }

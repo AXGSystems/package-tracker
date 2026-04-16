@@ -871,6 +871,8 @@
     Charts.gauge('gaugeCapacity', todayPkgs.length, Math.max(todayPkgs.length, 20), { color: '#1e5fb3', label: todayPkgs.length + '', subLabel: 'packages today' });
     const fbAvg = feedback.length ? (feedback.reduce((s,f)=>s+f.rating,0)/feedback.length) : 0;
     Charts.gauge('gaugeFeedback', fbAvg, 5, { color: '#c9a84c', label: fbAvg ? fbAvg.toFixed(1) + '/5' : '—', subLabel: feedback.length + ' reviews' });
+    const overdue = pending.filter(p => hBetween(p.checkinTime, now.toISOString()) >= 48);
+    Charts.gauge('gaugeOverdue', overdue.length, Math.max(pending.length, 1), { color: overdue.length > 0 ? '#dc2626' : '#16a34a', label: overdue.length + '', subLabel: overdue.length ? 'need follow-up' : 'all clear' });
 
     // ── VOLUME LINE — 14 DAYS ──
     const volData = [];
