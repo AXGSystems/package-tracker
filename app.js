@@ -1312,15 +1312,18 @@
   //  CHART TILE FLIP — Dynamic injection
   // ══════════════════════════════════════════════
 
-  // Click handlers for chart tiles — attach immediately
+  // Click handlers for ALL chart tiles — dead simple show/hide
   document.querySelectorAll('.chart-tile[data-chart]').forEach(tile => {
     tile.addEventListener('click', () => {
-      // Populate backs on first click if empty
       const overlay = tile.querySelector('.chart-back-overlay');
-      if (overlay && !overlay.innerHTML.trim()) { try { setupChartTileFlips(); } catch(e){} }
+      if (!overlay) return;
+      // Lazy-populate on first click
+      if (!overlay.innerHTML.trim()) { try { setupChartTileFlips(); } catch(e) { console.warn('Back populate error:', e); } }
       tile.classList.toggle('showing-back');
     });
   });
+  // Also populate immediately if we have data
+  try { setupChartTileFlips(); } catch(e) {}
 
   function setupChartTileFlips() {
     // Populate overlay backs with current data

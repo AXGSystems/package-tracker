@@ -1218,32 +1218,38 @@ input:focus, select:focus {
   transition-duration: 0.08s;
 }
 
-/* ── Chart tile click-to-reveal overlay (no DOM move = no canvas wipe) ── */
-.chart-tile[data-chart] { position: relative; }
+/* ── Chart tile click-to-reveal (simple show/hide, no transforms) ── */
+.chart-tile[data-chart] { position: relative; cursor: pointer; }
 
-/* Back overlay slides in on click — no DOM reparenting = canvases stay intact */
+/* Back content — hidden by default, shown on click */
 .chart-back-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: var(--r);
-  padding: 1.25rem;
+  display: none;
+  padding: 0.25rem 0;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(8px);
-  transition: opacity 0.3s, transform 0.3s;
-  z-index: 5;
+  max-height: 400px;
+}
+
+/* When showing back: hide canvas/legends/subtitles, show overlay */
+.chart-tile.showing-back canvas,
+.chart-tile.showing-back .chart-legend,
+.chart-tile.showing-back .chart-subtitle {
+  display: none;
 }
 
 .chart-tile.showing-back .chart-back-overlay {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
+  display: flex;
+  flex-direction: column;
+  animation: fadeSlideIn 0.25s ease;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Flip hint changes when showing back */
+.chart-tile.showing-back .chart-flip-hint::after {
+  content: ' (tap to return)';
 }
 
 .chart-back-title {
