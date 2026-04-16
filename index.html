@@ -121,27 +121,39 @@
             <label class="field-label">Carrier</label>
             <div class="carrier-grid" id="carrierGrid">
               <button type="button" class="carrier-btn selected" data-carrier="Amazon">
-                <img src="https://logo.clearbit.com/amazon.com" alt="Amazon" class="carrier-logo-img">
+                <div class="carrier-logo-box" style="background:#ff9900;">
+                  <svg viewBox="0 0 100 30" width="60" height="18"><path d="M60.6 22.8c-5.6 4.2-13.8 6.4-20.8 6.4-9.8 0-18.7-3.6-25.4-9.7-.5-.5-.1-1.1.6-.8 7.2 4.2 16.2 6.8 25.4 6.8 6.2 0 13.1-1.3 19.4-4 1-.4 1.8.6.8 1.3z" fill="#fff"/><path d="M63 20.1c-.7-.9-4.8-.4-6.6-.2-.6.1-.6-.4-.1-.8 3.2-2.3 8.5-1.6 9.2-.8.6.8-.2 6.1-3.2 8.6-.5.4-.9.2-.7-.3.7-1.7 2.2-5.5 1.4-6.5z" fill="#fff"/></svg>
+                </div>
                 <span class="carrier-label">Amazon</span>
               </button>
               <button type="button" class="carrier-btn" data-carrier="USPS">
-                <img src="https://logo.clearbit.com/usps.com" alt="USPS" class="carrier-logo-img">
-                <span class="carrier-label">USPS</span>
+                <div class="carrier-logo-box" style="background:#004b87;">
+                  <svg viewBox="0 0 60 20" width="52" height="17"><text x="50%" y="15" text-anchor="middle" fill="#fff" font-family="Arial Black,sans-serif" font-weight="900" font-size="16">USPS</text></svg>
+                </div>
+                <span class="carrier-label">US Postal</span>
               </button>
               <button type="button" class="carrier-btn" data-carrier="UPS">
-                <img src="https://logo.clearbit.com/ups.com" alt="UPS" class="carrier-logo-img">
+                <div class="carrier-logo-box" style="background:#351c15;">
+                  <svg viewBox="0 0 40 44" width="28" height="32"><path d="M20 0C9 0 0 7 0 18v8c0 10 9 18 20 18s20-8 20-18v-8C40 7 31 0 20 0z" fill="#ffb500"/><path d="M20 3C11 3 3 9 3 18v8c0 8 8 15 17 15s17-7 17-15v-8C37 9 29 3 20 3z" fill="#351c15"/><text x="50%" y="30" text-anchor="middle" fill="#ffb500" font-family="Arial Black,sans-serif" font-weight="900" font-size="17">UPS</text></svg>
+                </div>
                 <span class="carrier-label">UPS</span>
               </button>
               <button type="button" class="carrier-btn" data-carrier="FedEx">
-                <img src="https://logo.clearbit.com/fedex.com" alt="FedEx" class="carrier-logo-img">
+                <div class="carrier-logo-box" style="background:linear-gradient(135deg,#4d148c,#ff6600);">
+                  <svg viewBox="0 0 70 20" width="58" height="17"><text x="0" y="16" fill="#fff" font-family="Arial Black,sans-serif" font-weight="900" font-size="17">Fed</text><text x="36" y="16" fill="#fff" font-family="Arial Black,sans-serif" font-weight="900" font-size="17">Ex</text></svg>
+                </div>
                 <span class="carrier-label">FedEx</span>
               </button>
               <button type="button" class="carrier-btn" data-carrier="DHL">
-                <img src="https://logo.clearbit.com/dhl.com" alt="DHL" class="carrier-logo-img">
-                <span class="carrier-label">DHL</span>
+                <div class="carrier-logo-box" style="background:#d40511;">
+                  <svg viewBox="0 0 60 20" width="52" height="17"><text x="50%" y="16" text-anchor="middle" fill="#fc0" font-family="Arial Black,sans-serif" font-weight="900" font-size="18">DHL</text></svg>
+                </div>
+                <span class="carrier-label">DHL Express</span>
               </button>
               <button type="button" class="carrier-btn" data-carrier="Other">
-                <span style="font-size:2rem;line-height:1;">&#128179;</span>
+                <div class="carrier-logo-box" style="background:#8a8a9a;">
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                </div>
                 <span class="carrier-label">Other</span>
               </button>
             </div>
