@@ -693,82 +693,30 @@ input:focus, select:focus {
    ══════════════════════════════════════════════ */
 
 .btn-metallic-maroon {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(
-    160deg,
-    #1e060c 0%,
-    #3a0f1a 15%,
-    #5c1525 30%,
-    #7a2035 42%,
-    #8f2a42 48%,
-    #7a2035 52%,
-    #5c1525 62%,
-    #3a0f1a 78%,
-    #1e060c 100%
-  );
-  color: #f0d0d8;
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow:
-    0 4px 24px rgba(60,15,26,0.6),
-    0 1px 4px rgba(0,0,0,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.1),
-    inset 0 -1px 0 rgba(0,0,0,0.4);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  background: rgba(124,45,61,0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--maroon);
+  border: 2px solid rgba(124,45,61,0.25);
+  box-shadow: 0 4px 16px rgba(124,45,61,0.08), inset 0 1px 0 rgba(255,255,255,0.4);
+  font-weight: 800;
   letter-spacing: 0.03em;
-}
-
-.btn-metallic-maroon::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -120%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(
-    105deg,
-    transparent 25%,
-    rgba(255,180,200,0.04) 38%,
-    rgba(255,200,215,0.12) 47%,
-    rgba(255,220,230,0.18) 50%,
-    rgba(255,200,215,0.12) 53%,
-    rgba(255,180,200,0.04) 62%,
-    transparent 75%
-  );
-  animation: metalSheen 4s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes metalSheen {
-  0%   { left: -120%; }
-  40%  { left: 160%; }
-  100% { left: 160%; }
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
 
 .btn-metallic-maroon:hover {
-  background: linear-gradient(
-    160deg,
-    #2a0a12 0%,
-    #4d1422 15%,
-    #6e1c30 30%,
-    #8f2a42 42%,
-    #a33350 48%,
-    #8f2a42 52%,
-    #6e1c30 62%,
-    #4d1422 78%,
-    #2a0a12 100%
-  );
-  box-shadow:
-    0 12px 40px rgba(60,15,26,0.7),
-    0 2px 6px rgba(0,0,0,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    inset 0 -1px 0 rgba(0,0,0,0.4);
-  transform: translateY(-4px) scale(1.02);
+  background: rgba(124,45,61,0.18);
+  border-color: rgba(124,45,61,0.4);
+  color: #5a1a28;
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 14px 40px rgba(124,45,61,0.18), inset 0 1px 0 rgba(255,255,255,0.5);
 }
 
 .btn-metallic-maroon:active {
-  transform: translateY(-1px) scale(0.98);
-  transition-duration: 0.08s;
+  transform: translateY(3px) scale(0.96);
+  box-shadow: 0 1px 4px rgba(124,45,61,0.15), inset 0 2px 6px rgba(124,45,61,0.12);
+  background: rgba(124,45,61,0.22);
+  transition-duration: 0.06s;
 }
 
 #logSubmit:disabled {
@@ -778,9 +726,7 @@ input:focus, select:focus {
   box-shadow: none !important;
 }
 
-#logSubmit:disabled::before {
-  animation: none;
-}
+/* sheen removed */
 
 .carrier-label {
   font-size: 0.68rem;

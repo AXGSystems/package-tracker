@@ -412,6 +412,7 @@
     if(res.email) sync('sendNotification',{email:res.email,residentName:res.name,apartment:res.apartment,carrier:pkg.carrier,size:pkg.size,packageId:pkg.id});
 
     showSuccess('Package Logged!',`#${pkg.id} — ${res.name} (Apt ${res.apartment}) — ${logCarrier} ${logSize}\nLogged: ${fmtFull(pkg.checkinTime)}`);
+    launchConfetti(); setTimeout(stopConfetti, 3000);
     if(res.email) toast(`Notification sent to ${res.email}`,'info');
 
     // Undo support
