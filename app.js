@@ -11,7 +11,7 @@
   const SHEETS_ENABLED = SHEETS_API_URL.length > 0;
 
   // ── DATA ──
-  const KEYS = { residents: 'pd_residents', packages: 'pd_packages', prefs: 'pd_prefs', shiftNotes: 'pd_shiftnotes' };
+  const KEYS = { residents:'pd_residents', packages:'pd_packages', prefs:'pd_prefs', shiftNotes:'pd_shiftnotes', feedback:'pd_feedback' };
   function load(k)    { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } }
   function save(k, d) { localStorage.setItem(k, JSON.stringify(d)); }
   function loadObj(k)  { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch { return {}; } }
@@ -20,6 +20,7 @@
   let packages   = load(KEYS.packages);
   let prefs      = loadObj(KEYS.prefs);
   let shiftNotes = load(KEYS.shiftNotes);
+  let feedback   = load(KEYS.feedback);
 
   function nextId() { return packages.reduce((m, p) => Math.max(m, p.id || 0), 0) + 1; }
 
@@ -88,7 +89,11 @@
     document.getElementById('celebrationTime').textContent = fmtFull(pickupTime);
     document.getElementById('celebrationOverlay').classList.add('show');
     launchConfetti();
-    setTimeout(() => { document.getElementById('celebrationOverlay').classList.remove('show'); stopConfetti(); }, 3800);
+    setTimeout(() => {
+      document.getElementById('celebrationOverlay').classList.remove('show'); stopConfetti();
+      // Show feedback modal after celebration
+      setTimeout(() => showFeedbackModal(resName), 400);
+    }, 3800);
   }
 
   // ── CONFETTI ENGINE ──
@@ -808,6 +813,157 @@
   });
 
   // ══════════════════════════════════════════════
+  //  STATS DASHBOARD — Render Charts
+  // ══════════════════════════════════════════════
+
+  function renderStats() {
+    if (typeof Charts === 'undefined') return;
+
+    // KPIs
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayPkgs = packages.filter(p => new Date(p.checkinTime) >= today);
+    const pu = packages.filter(p => p.status === 'picked_up' && p.pickupTime);
+    const sameDayPU = pu.filter(p => {
+      const ci = new Date(p.checkinTime); ci.setHours(0,0,0,0);
+      const po = new Date(p.pickupTime); po.setHours(0,0,0,0);
+      return ci.getTime() === po.getTime();
+    });
+    const rate = pu.length ? Math.round((sameDayPU.length / pu.length) * 100) : 0;
+    let avg = '—';
+    if (pu.length) {
+      const t = pu.reduce((s, p) => s + hBetween(p.checkinTime, p.pickupTime), 0) / pu.length;
+      avg = t < 1 ? Math.round(t * 60) + 'm' : t < 24 ? t.toFixed(1) + 'h' : (t / 24).toFixed(1) + 'd';
+    }
+
+    document.getElementById('kpiTotal').textContent = packages.length;
+    document.getElementById('kpiToday2').textContent = todayPkgs.length;
+    document.getElementById('kpiPickupRate').textContent = rate + '%';
+    document.getElementById('kpiAvg2').textContent = avg;
+
+    // Volume line chart — last 14 days
+    const volData = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
+      const next = new Date(d); next.setDate(next.getDate() + 1);
+      const count = packages.filter(p => { const t = new Date(p.checkinTime); return t >= d && t < next; }).length;
+      volData.push({ label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), value: count });
+    }
+    Charts.line('chartVolume', volData, { color: '#c9a84c' });
+
+    // Carrier donut
+    const cc = {};
+    packages.forEach(p => cc[p.carrier] = (cc[p.carrier] || 0) + 1);
+    const carrierData = Object.entries(cc).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
+    Charts.donut('chartCarrier', carrierData, { centerLabel: 'Packages' });
+
+    // Size bar chart
+    const sc = {};
+    packages.forEach(p => sc[p.size] = (sc[p.size] || 0) + 1);
+    const sizeData = ['Envelope', 'Small', 'Medium', 'Large', 'Oversized'].filter(s => sc[s]).map(s => ({ label: s, value: sc[s] || 0 }));
+    Charts.bars('chartSize', sizeData);
+
+    // Day of week heatmap
+    const dayCount = [0, 0, 0, 0, 0, 0, 0];
+    packages.forEach(p => { dayCount[new Date(p.checkinTime).getDay()]++; });
+    const dayData = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label, i) => ({ label, value: dayCount[i] }));
+    Charts.heatmap('chartDays', dayData);
+
+    // Render feedback
+    renderFeedback();
+  }
+
+  // Re-render charts when stats tab is clicked
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.addEventListener('click', () => { if (b.dataset.tab === 'stats') setTimeout(renderStats, 50); });
+  });
+
+  // ══════════════════════════════════════════════
+  //  FEEDBACK SYSTEM
+  // ══════════════════════════════════════════════
+
+  let feedbackRating = 0;
+  let feedbackResName = '';
+
+  // Star hover/click
+  document.getElementById('starRating').addEventListener('click', e => {
+    const star = e.target.closest('.star');
+    if (!star) return;
+    feedbackRating = Number(star.dataset.star);
+    document.querySelectorAll('#starRating .star').forEach(s => {
+      s.classList.toggle('active', Number(s.dataset.star) <= feedbackRating);
+    });
+  });
+
+  document.getElementById('starRating').addEventListener('mouseover', e => {
+    const star = e.target.closest('.star');
+    if (!star) return;
+    const val = Number(star.dataset.star);
+    document.querySelectorAll('#starRating .star').forEach(s => {
+      s.style.color = Number(s.dataset.star) <= val ? '#c9a84c' : '';
+    });
+  });
+
+  document.getElementById('starRating').addEventListener('mouseleave', () => {
+    document.querySelectorAll('#starRating .star').forEach(s => {
+      s.style.color = s.classList.contains('active') ? '#c9a84c' : '';
+    });
+  });
+
+  function showFeedbackModal(resName) {
+    feedbackResName = resName;
+    feedbackRating = 0;
+    document.querySelectorAll('#starRating .star').forEach(s => s.classList.remove('active'));
+    document.getElementById('feedbackText').value = '';
+    document.getElementById('feedbackModal').style.display = 'flex';
+  }
+
+  document.getElementById('feedbackSkipBtn').addEventListener('click', () => {
+    document.getElementById('feedbackModal').style.display = 'none';
+  });
+
+  document.getElementById('feedbackSubmitBtn').addEventListener('click', () => {
+    if (!feedbackRating) { toast('Tap a star rating', 'error'); return; }
+    const text = document.getElementById('feedbackText').value.trim();
+    feedback.unshift({
+      id: crypto.randomUUID(),
+      name: feedbackResName,
+      rating: feedbackRating,
+      text: text || null,
+      time: new Date().toISOString()
+    });
+    save(KEYS.feedback, feedback);
+    document.getElementById('feedbackModal').style.display = 'none';
+    toast('Thanks for your feedback!', 'success');
+    renderFeedback();
+  });
+
+  function renderFeedback() {
+    const list = document.getElementById('feedbackList');
+    const empty = document.getElementById('feedbackEmpty');
+    if (!feedback.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    list.innerHTML = feedback.slice(0, 20).map(f => {
+      const stars = '&#9733;'.repeat(f.rating) + '<span style="opacity:0.15;">' + '&#9733;'.repeat(5 - f.rating) + '</span>';
+      return `<div class="feedback-item">
+        <div class="feedback-stars">${stars}</div>
+        <div class="feedback-body">
+          <div class="feedback-body-name">${esc(f.name)}</div>
+          ${f.text ? `<div class="feedback-body-text">"${esc(f.text)}"</div>` : ''}
+          <div class="feedback-body-time">${fmtFull(f.time)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ══════════════════════════════════════════════
+  //  PRINT FULL LOG
+  // ══════════════════════════════════════════════
+
+  document.getElementById('printLogBtn').addEventListener('click', () => {
+    window.print();
+  });
+
+  // ══════════════════════════════════════════════
   //  INIT
   // ══════════════════════════════════════════════
 
@@ -815,6 +971,7 @@
   renderResidents();
   renderDashboard();
   renderShiftNotes();
+  renderFeedback();
   updatePending();
   updateAnalytics();
 
@@ -822,6 +979,7 @@
     if(!confirm('Erase all data and reload demo?'))return;
     localStorage.removeItem(KEYS.residents);localStorage.removeItem(KEYS.packages);
     localStorage.removeItem(KEYS.prefs);localStorage.removeItem(KEYS.shiftNotes);
+    localStorage.removeItem(KEYS.feedback);
     location.reload();
   });
 
