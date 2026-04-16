@@ -1183,37 +1183,39 @@ input:focus, select:focus {
   50%      { transform: translateY(-4px); }
 }
 
-.chart-tile, .kpi-tile {
+/* Float animation ONLY on KPI tiles — NOT chart tiles (breaks canvas rendering) */
+.kpi-tile {
   animation: tileFloat 4s ease-in-out infinite;
 }
 
-.chart-tile:nth-child(1), .kpi-tile:nth-child(1) { animation-delay: 0s; }
-.chart-tile:nth-child(2), .kpi-tile:nth-child(2) { animation-delay: 0.5s; }
-.chart-tile:nth-child(3), .kpi-tile:nth-child(3) { animation-delay: 1s; }
-.chart-tile:nth-child(4), .kpi-tile:nth-child(4) { animation-delay: 1.5s; }
-.chart-tile:nth-child(5), .kpi-tile:nth-child(5) { animation-delay: 2s; }
-.chart-tile:nth-child(6), .kpi-tile:nth-child(6) { animation-delay: 2.5s; }
+.kpi-tile:nth-child(1) { animation-delay: 0s; }
+.kpi-tile:nth-child(2) { animation-delay: 0.5s; }
+.kpi-tile:nth-child(3) { animation-delay: 1s; }
+.kpi-tile:nth-child(4) { animation-delay: 1.5s; }
+.kpi-tile:nth-child(5) { animation-delay: 2s; }
+.kpi-tile:nth-child(6) { animation-delay: 2.5s; }
 
-/* Pause float on hover (so lift doesn't fight float) */
-.chart-tile:hover, .kpi-tile:hover { animation-play-state: paused; }
+.kpi-tile:hover { animation-play-state: paused; }
+
+/* Chart tiles get NO float animation (canvas compositing conflict) */
+.chart-tile { animation: none !important; }
 
 /* ── Super responsive hover ── */
 .chart-tile {
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease !important;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
 }
 
 .chart-tile:hover {
-  transform: translateY(-8px) scale(1.02) !important;
+  transform: translateY(-6px) scale(1.01);
   box-shadow:
-    0 20px 60px rgba(0,0,0,0.12),
-    0 0 30px rgba(201,168,76,0.06),
-    inset 0 1px 0 rgba(255,255,255,0.7) !important;
+    0 16px 48px rgba(0,0,0,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.7);
 }
 
 .chart-tile:active {
-  transform: translateY(-2px) scale(0.99) !important;
-  transition-duration: 0.08s !important;
+  transform: translateY(-2px) scale(0.99);
+  transition-duration: 0.08s;
 }
 
 /* ── Chart tile click-to-reveal overlay (no DOM move = no canvas wipe) ── */
