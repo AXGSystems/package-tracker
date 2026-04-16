@@ -67,6 +67,11 @@ html { font-size: 16px; -webkit-text-size-adjust: 100%; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 10% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 80%, rgba(124,45,61,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(30,95,179,0.04) 0%, transparent 60%);
+  background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
   min-height: 100dvh;
@@ -175,10 +180,11 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: var(--glass-heavy);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.78);
+  backdrop-filter: blur(30px) saturate(1.5);
+  -webkit-backdrop-filter: blur(30px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-top: 1.5px solid rgba(255,255,255,0.85);
   border-bottom: 2px solid var(--gold-border);
   border-radius: var(--r);
   margin-bottom: 0.75rem;
@@ -311,16 +317,17 @@ body {
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
   min-height: var(--touch-min);
-  border: 1px solid var(--glass-border);
-  background: var(--glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: var(--text-muted);
   border-radius: var(--r-sm);
   cursor: pointer;
   font-size: 0.88rem;
   font-weight: 600;
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   transition: all 0.2s;
   flex: 1;
   justify-content: center;
@@ -330,10 +337,10 @@ body {
 .tab-btn:hover { background: var(--glass-hover); color: var(--text-secondary); }
 
 .tab-btn.active {
-  background: var(--white);
+  background: rgba(255,255,255,0.85);
   border-color: var(--gold-border);
   color: var(--gold-dark);
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 16px rgba(201,168,76,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 /* ══════════════════════════════════════════════
@@ -344,15 +351,7 @@ body {
 .tab-panel.active { display: block; }
 .tab-content { flex: 1; }
 
-.panel-card {
-  background: var(--glass-heavy);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-lg);
-}
+/* panel-card styles in GLASSMORPHIC OVERHAUL section below */
 
 .panel-card h2 {
   font-family: 'Playfair Display', serif;
@@ -826,10 +825,13 @@ input:focus, select:focus {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255,255,255,0.5);
+  border-radius: var(--r-sm);
+  padding: 0.85rem;
+  text-align: center;
   box-shadow: 0 4px 20px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-.stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7); }
 
 /* ══════════════════════════════════════════════
    STATS DASHBOARD — KPI Tiles (colorful, upper)
@@ -1021,14 +1023,7 @@ input:focus, select:focus {
   margin-bottom: 1.25rem;
 }
 
-.stat-card {
-  background: var(--white);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r-sm);
-  padding: 0.85rem;
-  text-align: center;
-  box-shadow: var(--shadow);
-}
+/* stat-card base styles in GLASSMORPHIC OVERHAUL section above */
 
 .stat-value {
   font-size: 1.5rem;
@@ -1115,11 +1110,14 @@ tbody tr:hover { background: rgba(201,168,76,0.04); }
   align-items: center;
   padding: 1rem 1.25rem;
   min-height: 60px;
-  background: var(--white);
-  border: 2px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid rgba(255,255,255,0.5);
   border-radius: var(--r-sm);
   margin-bottom: 0.5rem;
   cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.4);
   transition: all 0.15s;
 }
 
@@ -1501,14 +1499,18 @@ textarea:focus { outline:none; border-color: var(--gold); box-shadow: 0 0 0 3px 
 
 .shift-note {
   padding: 1rem 1.25rem;
-  background: var(--white);
-  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.45);
   border-left: 4px solid var(--maroon);
   border-radius: var(--r-sm);
   margin-bottom: 0.6rem;
   position: relative;
-  transition: box-shadow 0.15s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
+.shift-note:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.07); }
 
 .shift-note:hover { box-shadow: var(--shadow); }
 
@@ -1571,12 +1573,15 @@ textarea:focus { outline:none; border-color: var(--gold); box-shadow: 0 0 0 3px 
 }
 
 .carrier-card {
-  background: var(--white);
-  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.5);
+  border-top: 1.5px solid rgba(255,255,255,0.7);
   border-radius: var(--r);
   overflow: hidden;
-  box-shadow: var(--shadow);
-  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .carrier-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
