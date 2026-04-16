@@ -976,7 +976,7 @@
 
   // Re-render charts when stats tab is clicked
   document.querySelectorAll('.tab-btn').forEach(b => {
-    b.addEventListener('click', () => { if (b.dataset.tab === 'stats') setTimeout(renderStats, 50); });
+    b.addEventListener('click', () => { if (b.dataset.tab === 'stats') setTimeout(renderStats, 200); });
   });
 
   // ══════════════════════════════════════════════

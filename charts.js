@@ -18,11 +18,16 @@ const Charts = (function(){
   function dpr(cv){
     const r = window.devicePixelRatio || 1;
     const rect = cv.getBoundingClientRect();
-    cv.width = rect.width * r;
-    cv.height = rect.height * r;
+    // Fallback if element not laid out yet (hidden tab)
+    let rw = rect.width || cv.parentElement?.offsetWidth || cv.offsetWidth || 300;
+    let rh = rect.height || cv.parentElement?.offsetHeight || cv.offsetHeight || 150;
+    // Also try computed style
+    if (rw < 10) { const cs = getComputedStyle(cv); rw = parseFloat(cs.width) || 300; rh = parseFloat(cs.height) || 150; }
+    cv.width = rw * r;
+    cv.height = rh * r;
     const cx = cv.getContext('2d');
     cx.scale(r, r);
-    return { cx, w: rect.width, h: rect.height };
+    return { cx, w: rw, h: rh };
   }
 
   // ── Animated Donut Chart ──

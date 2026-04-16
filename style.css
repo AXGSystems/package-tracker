@@ -1362,6 +1362,16 @@ input:focus, select:focus {
   -webkit-backface-visibility: hidden;
 }
 
+.gauge-flip-tile .chart-front {
+  position: relative;
+  z-index: 1;
+}
+
+.gauge-flip-tile canvas {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
 .gauge-flip-tile .chart-back {
   position: absolute;
   inset: 0;
