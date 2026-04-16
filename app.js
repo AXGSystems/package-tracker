@@ -1319,6 +1319,29 @@
         html: sec('Avg Hours to Pickup', Object.keys(cSpeed).sort((a, b) => cSpeed[a] / cSpeedN[a] - cSpeed[b] / cSpeedN[b]).map(c => m(c, (cSpeed[c] / cSpeedN[c]).toFixed(1) + ' hours')).join('')) +
           `<div class="chart-back-insight">If a carrier's packages sit longest, it may indicate delivery timing (late evening) rather than resident disinterest.</div>`
       },
+      gaugePickup: {
+        title: 'Same-Day Pickup Deep Dive',
+        html: sec('Pickup Breakdown', m('Total picked up', pu.length) + m('Same-day pickups', packages.filter(p=>{if(p.status!=='picked_up'||!p.pickupTime)return false;const ci=new Date(p.checkinTime);ci.setHours(0,0,0,0);const po=new Date(p.pickupTime);po.setHours(0,0,0,0);return ci.getTime()===po.getTime();}).length) + m('Next-day pickups', pu.filter(p=>{const h=hBetween(p.checkinTime,p.pickupTime);return h>=24&&h<48;}).length) + m('2+ day pickups', pu.filter(p=>hBetween(p.checkinTime,p.pickupTime)>=48).length)) +
+          sec('Speed Analysis', m('Fastest pickup', pu.length ? (()=>{const sorted=[...pu].sort((a,b)=>hBetween(a.checkinTime,a.pickupTime)-hBetween(b.checkinTime,b.pickupTime));const h=hBetween(sorted[0].checkinTime,sorted[0].pickupTime);return h<1?Math.round(h*60)+'m':h.toFixed(1)+'h';})() : '—') + m('Slowest pickup', pu.length ? (()=>{const sorted=[...pu].sort((a,b)=>hBetween(b.checkinTime,b.pickupTime)-hBetween(a.checkinTime,a.pickupTime));const h=hBetween(sorted[0].checkinTime,sorted[0].pickupTime);return h<24?h.toFixed(1)+'h':(h/24).toFixed(1)+'d';})() : '—') + m('Avg pickup time', avgH<1?Math.round(avgH*60)+'m':avgH<24?avgH.toFixed(1)+'h':(avgH/24).toFixed(1)+'d')) +
+          `<div class="chart-back-insight">A same-day rate above 70% is excellent. Below 50% means residents aren't checking for packages — consider sending a second reminder at 5 PM.</div>`
+      },
+      gaugeCapacity: {
+        title: 'Volume Analysis',
+        html: sec('Today vs History', m('Today', packages.filter(p=>new Date(p.checkinTime)>=today).length + ' packages') + m('Yesterday', packages.filter(p=>{const t=new Date(p.checkinTime);const y=new Date(today.getTime()-86400000);return t>=y&&t<today;}).length + ' packages') + m('7-day avg', (packages.filter(p=>new Date(p.checkinTime)>=new Date(Date.now()-7*86400000)).length/7).toFixed(1) + '/day') + m('30-day avg', (packages.filter(p=>new Date(p.checkinTime)>=new Date(Date.now()-30*86400000)).length/30).toFixed(1) + '/day')) +
+          `<div class="chart-back-insight">Track your daily average over time. If it's rising month-over-month, present the data to management to justify additional front desk coverage.</div>`
+      },
+      gaugeFeedback: {
+        title: 'Satisfaction Detail',
+        html: sec('Rating Distribution', [5,4,3,2,1].map(r=>m(r+' stars', feedback.filter(f=>f.rating===r).length + ' reviews')).join('')) +
+          sec('Highlights', m('Total reviews', feedback.length) + m('Average rating', feedback.length?(feedback.reduce((s,f)=>s+f.rating,0)/feedback.length).toFixed(1)+'/5':'—') + m('5-star rate', feedback.length?Math.round(feedback.filter(f=>f.rating===5).length/feedback.length*100)+'%':'—')) +
+          `<div class="chart-back-insight">Aim for 4.5+ stars. Read the text feedback for specific compliments and complaints — share positive shoutouts with the team.</div>`
+      },
+      gaugeOverdue: {
+        title: 'Overdue Detail',
+        html: sec('Overdue Packages', pending.filter(p=>hBetween(p.checkinTime,now.toISOString())>=48).length > 0 ? pending.filter(p=>hBetween(p.checkinTime,now.toISOString())>=48).slice(0,5).map(p=>m('#'+p.id+' '+p.residentName, Math.round(hBetween(p.checkinTime,now.toISOString()))+'h ago')).join('') : m('None','All clear!')) +
+          sec('Pending Health', m('Total pending', pending.length) + m('Overdue (48h+)', pending.filter(p=>hBetween(p.checkinTime,now.toISOString())>=48).length) + m('At risk (24-48h)', pending.filter(p=>{const h=hBetween(p.checkinTime,now.toISOString());return h>=24&&h<48;}).length)) +
+          `<div class="chart-back-insight">Overdue packages are a liability risk. Call or text the resident directly. If unreachable after 7 days, escalate to the property manager.</div>`
+      },
       chartAging: {
         title: 'Aging Analysis',
         html: sec('Current Pending', m('Total pending', pending.length) + m('Under 6 hours', pending.filter(p => hBetween(p.checkinTime, now.toISOString()) < 6).length) + m('6-24 hours', pending.filter(p => { const h = hBetween(p.checkinTime, now.toISOString()); return h >= 6 && h < 24; }).length) + m('24-48 hours', pending.filter(p => { const h = hBetween(p.checkinTime, now.toISOString()); return h >= 24 && h < 48; }).length) + m('Over 48 hours', pending.filter(p => hBetween(p.checkinTime, now.toISOString()) >= 48).length)) +

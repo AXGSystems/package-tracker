@@ -970,31 +970,35 @@ input:focus, select:focus {
   position: absolute;
   inset: 0;
   transform: rotateY(180deg);
-  padding: 0.75rem;
+  padding: 0.5rem 0.6rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .kpi-back-title {
   font-weight: 700;
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-muted);
-  margin-bottom: 0.3rem;
+  color: var(--maroon);
+  margin-bottom: 0.2rem;
 }
 
 .kpi-back-line {
   display: flex;
   justify-content: space-between;
-  padding: 0.15rem 0;
+  padding: 0.1rem 0;
   border-bottom: 1px dotted rgba(0,0,0,0.06);
-  font-size: 0.75rem;
+  font-size: 0.68rem;
+  gap: 0.25rem;
 }
+.kpi-back-line strong { white-space: nowrap; }
 
 .kpi-back-line:last-child { border-bottom: none; }
 
