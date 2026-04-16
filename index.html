@@ -66,6 +66,13 @@
           <span class="pending-dot"></span>
           <span id="pendingCount">0</span> Awaiting Pickup
         </div>
+        <div style="position:relative;">
+          <button class="notif-bell" id="notifBell" aria-label="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <span class="notif-bell-count" id="notifCount"></span>
+          </button>
+          <div class="notif-drawer" id="notifDrawer"></div>
+        </div>
         <div class="clock" id="clock"></div>
       </div>
     </header>
@@ -401,8 +408,8 @@
             <div class="kpi-tile-inner">
               <div class="kpi-front">
                 <div class="kpi-value" id="kpiToday2">0</div>
+                <div class="kpi-trend" id="kpiTodayTrend"></div>
                 <div class="kpi-label">Today</div>
-                <div class="kpi-sub">Logged today</div>
               </div>
               <div class="kpi-back" id="kpiTodayBack"></div>
             </div>
@@ -445,8 +452,8 @@
             <div class="kpi-tile-inner">
               <div class="kpi-front">
                 <div class="kpi-value" id="kpiWeekly">0</div>
+                <div class="kpi-trend" id="kpiWeeklyTrend"></div>
                 <div class="kpi-label">This Week</div>
-                <div class="kpi-sub">Last 7 days</div>
               </div>
               <div class="kpi-back" id="kpiWeeklyBack"></div>
             </div>
