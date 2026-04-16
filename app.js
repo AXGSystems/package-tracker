@@ -889,10 +889,10 @@
     packages.forEach(p => { dayCount[new Date(p.checkinTime).getDay()]++; });
     Charts.heatmap('chartDays', ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((l,i)=>({label:l,value:dayCount[i]})));
 
-    // ── SIZE BARS ──
+    // ── SIZE PIE ──
     const sc = {};
     packages.forEach(p => sc[p.size] = (sc[p.size] || 0) + 1);
-    Charts.bars('chartSize', ['Envelope','Small','Medium','Large','Oversized'].filter(s=>sc[s]).map(s=>({label:s,value:sc[s]||0})));
+    Charts.donut('chartSize', ['Envelope','Small','Medium','Large','Oversized'].filter(s=>sc[s]).map(s=>({label:s,value:sc[s]||0})), { centerLabel: 'Sizes' });
 
     // ── STAFF ACTIVITY ──
     const staffCounts = {};
@@ -1024,9 +1024,113 @@
   //  PRINT FULL LOG
   // ══════════════════════════════════════════════
 
-  document.getElementById('printLogBtn').addEventListener('click', () => {
-    window.print();
-  });
+  document.getElementById('printLogBtn').addEventListener('click', () => { window.print(); });
+
+  // ══════════════════════════════════════════════
+  //  REPORT GENERATOR
+  // ══════════════════════════════════════════════
+
+  document.getElementById('generateReportBtn').addEventListener('click', generateReport);
+  document.getElementById('reportCloseBtn').addEventListener('click', () => { document.getElementById('reportModal').style.display='none'; });
+  document.getElementById('reportPrintBtn').addEventListener('click', () => { window.print(); });
+
+  function generateReport() {
+    const now = new Date();
+    const today = new Date(); today.setHours(0,0,0,0);
+    const weekAgo = new Date(now.getTime()-7*86400000);
+    const monthAgo = new Date(now.getTime()-30*86400000);
+
+    const total = packages.length;
+    const todayPkgs = packages.filter(p=>new Date(p.checkinTime)>=today);
+    const weekPkgs = packages.filter(p=>new Date(p.checkinTime)>=weekAgo);
+    const monthPkgs = packages.filter(p=>new Date(p.checkinTime)>=monthAgo);
+    const pending = packages.filter(p=>p.status==='pending');
+    const lost = packages.filter(p=>p.status==='lost');
+    const pu = packages.filter(p=>p.status==='picked_up'&&p.pickupTime);
+    const overdue = pending.filter(p=>hBetween(p.checkinTime,now.toISOString())>=48);
+
+    const sameDayPU = pu.filter(p=>{const ci=new Date(p.checkinTime);ci.setHours(0,0,0,0);const po=new Date(p.pickupTime);po.setHours(0,0,0,0);return ci.getTime()===po.getTime();});
+    const rate = pu.length?Math.round((sameDayPU.length/pu.length)*100):0;
+
+    let avgH=0;
+    if(pu.length) avgH=pu.reduce((s,p)=>s+hBetween(p.checkinTime,p.pickupTime),0)/pu.length;
+    const avgLabel=avgH<1?Math.round(avgH*60)+' minutes':avgH<24?avgH.toFixed(1)+' hours':(avgH/24).toFixed(1)+' days';
+
+    // Carrier stats
+    const cc={};packages.forEach(p=>cc[p.carrier]=(cc[p.carrier]||0)+1);
+    const topCarrier=Object.entries(cc).sort((a,b)=>b[1]-a[1])[0];
+
+    // Peak hour
+    const hc=new Array(24).fill(0);packages.forEach(p=>hc[new Date(p.checkinTime).getHours()]++);
+    const peakHour=hc.indexOf(Math.max(...hc));
+    const peakLabel=peakHour===0?'12 AM':peakHour<12?peakHour+' AM':peakHour===12?'12 PM':(peakHour-12)+' PM';
+
+    // Busiest day
+    const dc=[0,0,0,0,0,0,0];packages.forEach(p=>dc[new Date(p.checkinTime).getDay()]++);
+    const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const busiestDay=days[dc.indexOf(Math.max(...dc))];
+
+    // Size breakdown
+    const szc={};packages.forEach(p=>szc[p.size]=(szc[p.size]||0)+1);
+    const sizeLines=Object.entries(szc).sort((a,b)=>b[1]-a[1]).map(([s,c])=>`${s}: ${c} (${Math.round(c/total*100)}%)`).join(', ');
+
+    // Staff
+    const stc={};packages.forEach(p=>stc[p.loggedBy]=(stc[p.loggedBy]||0)+1);
+    const topStaff=Object.entries(stc).sort((a,b)=>b[1]-a[1])[0];
+
+    // Feedback
+    const fbAvg=feedback.length?(feedback.reduce((s,f)=>s+f.rating,0)/feedback.length).toFixed(1):'N/A';
+
+    // Suggestions
+    const suggestions=[];
+    if(rate<70) suggestions.push('Same-day pickup rate is below 70%. Consider sending reminder notifications to residents with pending packages after 4 hours.');
+    if(overdue.length>0) suggestions.push(`${overdue.length} package(s) have been pending for over 48 hours. Recommend direct contact with those residents.`);
+    if(peakHour>=11&&peakHour<=14) suggestions.push('Peak delivery window is during lunch hours. Ensure adequate desk coverage between 11 AM and 2 PM.');
+    if(lost.length>0) suggestions.push(`${lost.length} package(s) are marked as lost. Review security camera footage and carrier delivery confirmations.`);
+    if(avgH>12) suggestions.push('Average pickup time exceeds 12 hours. Consider a lobby display board or second daily notification to speed up collections.');
+    if(feedback.length&&Number(fbAvg)<4) suggestions.push('Resident satisfaction is below 4.0 stars. Review recent feedback for common complaints.');
+    if(pending.length>15) suggestions.push('Front desk is holding '+pending.length+' packages. Consider temporary overflow storage or requesting residents to pick up promptly.');
+    if(!suggestions.length) suggestions.push('Operations are running smoothly. All key metrics are within healthy ranges.');
+
+    const m = (label,value) => `<div class="report-metric"><span class="report-metric-label">${label}</span><span class="report-metric-value">${value}</span></div>`;
+
+    document.getElementById('reportDate').textContent = fmtFull(now.toISOString());
+    document.getElementById('reportBody').innerHTML = `
+      <h4>Executive Summary</h4>
+      ${m('Total Packages (All Time)', total)}
+      ${m('Packages Today', todayPkgs.length)}
+      ${m('Packages This Week', weekPkgs.length)}
+      ${m('Packages This Month (30 days)', monthPkgs.length)}
+      ${m('Currently at Front Desk', pending.length)}
+      ${m('Overdue (48h+)', overdue.length)}
+      ${m('Lost/Missing', lost.length)}
+
+      <h4>Performance Metrics</h4>
+      ${m('Same-Day Pickup Rate', rate+'%')}
+      ${m('Average Pickup Time', avgLabel)}
+      ${m('Resident Satisfaction', fbAvg+'/5.0 ('+feedback.length+' reviews)')}
+
+      <h4>Delivery Patterns</h4>
+      ${m('Top Carrier', topCarrier?topCarrier[0]+' ('+topCarrier[1]+' packages)':'N/A')}
+      ${m('Peak Delivery Hour', peakLabel+' ('+hc[peakHour]+' packages)')}
+      ${m('Busiest Day', busiestDay+' ('+dc[days.indexOf(busiestDay)]+' packages)')}
+      ${m('Size Breakdown', sizeLines||'N/A')}
+
+      <h4>Staffing</h4>
+      ${m('Most Active Staff', topStaff?topStaff[0]+' ('+topStaff[1]+' packages logged)':'N/A')}
+      ${Object.entries(stc).sort((a,b)=>b[1]-a[1]).map(([s,c])=>m(s,c+' packages')).join('')}
+
+      <h4>Recommendations</h4>
+      ${suggestions.map(s=>'<div class="report-suggestion">'+esc(s)+'</div>').join('')}
+
+      <div class="report-footer">
+        <p>ConciURGE Operations Report &middot; The REMY Apartments &middot; A LIVEBe Community</p>
+        <p style="margin-top:0.3rem;">Powered &amp; Designed by AXG SYSTEMS</p>
+      </div>
+    `;
+
+    document.getElementById('reportModal').style.display='flex';
+  }
 
   // ══════════════════════════════════════════════
   //  INIT
