@@ -928,7 +928,28 @@
       else if (h < 48) agingBuckets['1-2 days']++;
       else agingBuckets['2+ days']++;
     });
-    Charts.bars('chartAging', Object.entries(agingBuckets).map(([label,value])=>({label,value})));
+    Charts.donut('chartAging', Object.entries(agingBuckets).filter(([,v])=>v>0).map(([label,value])=>({label,value})), { centerLabel: 'Pending' });
+
+    // Aging follow-up list
+    const agingListEl = document.getElementById('agingList');
+    if (agingListEl) {
+      const needFollowUp = pending
+        .map(p => ({ ...p, hours: Math.round(hBetween(p.checkinTime, now.toISOString())) }))
+        .sort((a, b) => b.hours - a.hours)
+        .filter(p => p.hours >= 12);
+      if (needFollowUp.length) {
+        agingListEl.innerHTML = needFollowUp.slice(0, 10).map(p => {
+          const isOverdue = p.hours >= 48;
+          const timeStr = p.hours < 24 ? p.hours + 'h' : (p.hours / 24).toFixed(1) + ' days';
+          return `<div class="aging-item${isOverdue ? ' overdue' : ''}">
+            <div><span class="aging-item-name">${esc(p.residentName)}</span> <span style="color:var(--text-muted);font-size:0.75rem;">Apt ${esc(p.apartment)} — ${esc(p.carrier)}</span></div>
+            <span class="aging-item-time${isOverdue ? ' overdue' : ''}">${timeStr}</span>
+          </div>`;
+        }).join('');
+      } else {
+        agingListEl.innerHTML = '<p class="empty-state" style="padding:1.5rem;">All packages under 12 hours — no follow-up needed!</p>';
+      }
+    }
 
     // ── CARRIER PICKUP SPEED ──
     const carrierSpeed = {};
@@ -944,10 +965,11 @@
     })).sort((a,b) => a.value - b.value);
     Charts.hBars('chartCarrierSpeed', speedData, { color: '#c9a84c', suffix: ' hrs', labelWidth: 80 });
 
-    // Feedback + card backs + chart flips
+    // Feedback + card backs + chart flips + gauge flips
     renderFeedback();
     populateKpiBackCards();
     setupChartTileFlips();
+    populateGaugeFlipBacks();
 
     } catch(e) { console.error('Stats render error:', e); }
   }
@@ -1222,6 +1244,62 @@
       const trend=weekP.length>prevWeek.length?'+'+(weekP.length-prevWeek.length)+' vs last week':weekP.length<prevWeek.length?(weekP.length-prevWeek.length)+' vs last week':'Same as last week';
       el('kpiWeeklyBack').innerHTML=`<div class="kpi-back-title">Weekly Detail</div>${ln('This Week',weekP.length)}${ln('Last Week',prevWeek.length)}${ln('Trend',trend)}`;
     }
+  }
+
+  // ══════════════════════════════════════════════
+  //  GAUGE FLIP — Populate backs + click handlers
+  // ══════════════════════════════════════════════
+
+  // Click handlers for gauge tiles (set up once)
+  document.querySelectorAll('.gauge-flip-tile').forEach(tile => {
+    tile.addEventListener('click', () => tile.classList.toggle('flipped'));
+    tile.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();tile.classList.toggle('flipped');} });
+  });
+
+  function populateGaugeFlipBacks() {
+    const now = new Date(), today = new Date(); today.setHours(0,0,0,0);
+    const pending = packages.filter(p => p.status === 'pending');
+    const pu = packages.filter(p => p.status === 'picked_up' && p.pickupTime);
+    const weekAgo = new Date(now.getTime()-7*86400000);
+    const sameDayPU = pu.filter(p=>{const ci=new Date(p.checkinTime);ci.setHours(0,0,0,0);const po=new Date(p.pickupTime);po.setHours(0,0,0,0);return ci.getTime()===po.getTime();});
+    let avgH=0; if(pu.length) avgH=pu.reduce((s,p)=>s+hBetween(p.checkinTime,p.pickupTime),0)/pu.length;
+
+    const m=(l,v)=>`<div class="chart-back-metric"><span>${l}</span><strong>${v}</strong></div>`;
+    const sec=(t,c)=>`<div class="chart-back-section"><div class="chart-back-section-title">${t}</div>${c}</div>`;
+
+    const el=id=>document.getElementById(id);
+
+    // Pickup Rate back
+    const pb=el('gaugePickupBack');
+    if(pb) pb.innerHTML=`<div class="chart-back-title">Pickup Speed Analysis</div>`+
+      sec('Breakdown',m('Same-day pickups',sameDayPU.length)+m('Next-day',pu.filter(p=>{const h=hBetween(p.checkinTime,p.pickupTime);return h>=24&&h<48;}).length)+m('2+ days',pu.filter(p=>hBetween(p.checkinTime,p.pickupTime)>=48).length)+m('Total picked up',pu.length))+
+      sec('Speed',m('Fastest',pu.length?(()=>{const s=[...pu].sort((a,b)=>hBetween(a.checkinTime,a.pickupTime)-hBetween(b.checkinTime,b.pickupTime));const h=hBetween(s[0].checkinTime,s[0].pickupTime);return h<1?Math.round(h*60)+'m':h.toFixed(1)+'h';})():'—')+m('Slowest',pu.length?(()=>{const s=[...pu].sort((a,b)=>hBetween(b.checkinTime,b.pickupTime)-hBetween(a.checkinTime,a.pickupTime));const h=hBetween(s[0].checkinTime,s[0].pickupTime);return h<24?h.toFixed(1)+'h':(h/24).toFixed(1)+'d';})():'—')+m('Average',avgH<1?Math.round(avgH*60)+'m':avgH<24?avgH.toFixed(1)+'h':(avgH/24).toFixed(1)+'d'))+
+      `<div class="chart-back-insight">Above 70% same-day is excellent. Send a 5 PM reminder to boost this rate.</div>`;
+
+    // Capacity back
+    const cb=el('gaugeCapacityBack');
+    if(cb){const tp=packages.filter(p=>new Date(p.checkinTime)>=today).length;
+      const yp=packages.filter(p=>{const t=new Date(p.checkinTime);const y=new Date(today.getTime()-86400000);return t>=y&&t<today;}).length;
+      const wa=(packages.filter(p=>new Date(p.checkinTime)>=weekAgo).length/7).toFixed(1);
+      cb.innerHTML=`<div class="chart-back-title">Volume Comparison</div>`+
+        sec('Daily',m('Today so far',tp)+m('Yesterday total',yp)+m('7-day daily avg',wa+'/day'))+
+        sec('Trend',m('vs Yesterday',tp>yp?'+'+(tp-yp)+' more':tp<yp?(tp-yp)+' fewer':'Same'))+
+        `<div class="chart-back-insight">If today exceeds your 7-day average, expect a busy afternoon. Ensure desk coverage.</div>`;}
+
+    // Feedback back
+    const fb=el('gaugeFeedbackBack');
+    if(fb) fb.innerHTML=`<div class="chart-back-title">Satisfaction Breakdown</div>`+
+      sec('Ratings',[5,4,3,2,1].map(r=>m(r+' stars',feedback.filter(f=>f.rating===r).length)).join(''))+
+      sec('Summary',m('Total reviews',feedback.length)+m('Avg rating',feedback.length?(feedback.reduce((s,f)=>s+f.rating,0)/feedback.length).toFixed(1)+'/5':'—'))+
+      `<div class="chart-back-insight">Share 5-star shoutouts with the team — recognition boosts morale and retention.</div>`;
+
+    // Overdue back
+    const ob=el('gaugeOverdueBack');
+    if(ob){const od=pending.filter(p=>hBetween(p.checkinTime,now.toISOString())>=48);
+      ob.innerHTML=`<div class="chart-back-title">Overdue Packages</div>`+
+        (od.length?sec('Action Required',od.slice(0,5).map(p=>m('#'+p.id+' '+p.residentName,Math.round(hBetween(p.checkinTime,now.toISOString()))+'h')).join('')):sec('Status',m('All clear','No overdue packages!')))+
+        sec('Risk',m('At risk (24-48h)',pending.filter(p=>{const h=hBetween(p.checkinTime,now.toISOString());return h>=24&&h<48;}).length)+m('Overdue (48h+)',od.length))+
+        `<div class="chart-back-insight">Call overdue residents directly. After 7 days, escalate to property management.</div>`;}
   }
 
   // ══════════════════════════════════════════════

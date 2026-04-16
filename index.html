@@ -462,21 +462,33 @@
 
         <!-- Gauges -->
         <div class="stats-gauge-row">
-          <div class="chart-tile" title="What percent of packages are picked up the same day?">
-            <h3>Same-Day Pickup Rate</h3>
-            <canvas id="gaugePickup" style="width:100%;height:140px;"></canvas>
+          <div class="gauge-flip-tile" data-gauge="gaugePickup" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
+            <div class="chart-tile-inner">
+              <div class="chart-front"><h3>Same-Day Pickup Rate</h3><canvas id="gaugePickup" style="width:100%;height:140px;"></canvas></div>
+              <div class="chart-back" id="gaugePickupBack"></div>
+            </div>
           </div>
-          <div class="chart-tile" title="How many packages came in today vs your typical daily average?">
-            <h3>Daily Volume</h3>
-            <canvas id="gaugeCapacity" style="width:100%;height:140px;"></canvas>
+          <div class="gauge-flip-tile" data-gauge="gaugeCapacity" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
+            <div class="chart-tile-inner">
+              <div class="chart-front"><h3>Daily Volume</h3><canvas id="gaugeCapacity" style="width:100%;height:140px;"></canvas></div>
+              <div class="chart-back" id="gaugeCapacityBack"></div>
+            </div>
           </div>
-          <div class="chart-tile" title="Average star rating from resident feedback after pickup">
-            <h3>Resident Satisfaction</h3>
-            <canvas id="gaugeFeedback" style="width:100%;height:140px;"></canvas>
+          <div class="gauge-flip-tile" data-gauge="gaugeFeedback" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
+            <div class="chart-tile-inner">
+              <div class="chart-front"><h3>Resident Satisfaction</h3><canvas id="gaugeFeedback" style="width:100%;height:140px;"></canvas></div>
+              <div class="chart-back" id="gaugeFeedbackBack"></div>
+            </div>
           </div>
-          <div class="chart-tile" title="Packages overdue more than 48 hours">
-            <h3>Overdue Alert</h3>
-            <canvas id="gaugeOverdue" style="width:100%;height:140px;"></canvas>
+          <div class="gauge-flip-tile" data-gauge="gaugeOverdue" role="button" tabindex="0">
+            <span class="chart-flip-hint">tap for insights</span>
+            <div class="chart-tile-inner">
+              <div class="chart-front"><h3>Overdue Alert</h3><canvas id="gaugeOverdue" style="width:100%;height:140px;"></canvas></div>
+              <div class="chart-back" id="gaugeOverdueBack"></div>
+            </div>
           </div>
         </div>
 
@@ -538,11 +550,19 @@
           </div>
         </div>
 
-        <!-- Pending Aging (full width) -->
-        <div class="chart-tile feedback-tile">
-          <h3>Pending Package Aging</h3>
-          <p class="chart-subtitle">How long uncollected packages have been sitting at the front desk — red flags packages that need follow-up</p>
-          <canvas id="chartAging" style="width:100%;height:160px;"></canvas>
+        <!-- Pending Aging (split into 2) -->
+        <div class="stats-chart-row">
+          <div class="chart-tile">
+            <h3>Package Aging Distribution</h3>
+            <p class="chart-subtitle">How long pending packages have been waiting</p>
+            <canvas id="chartAging" style="width:100%;height:200px;"></canvas>
+            <div class="chart-legend" id="agingLegend"></div>
+          </div>
+          <div class="chart-tile">
+            <h3>Packages Needing Follow-Up</h3>
+            <p class="chart-subtitle">Overdue 24h+ — contact these residents</p>
+            <div id="agingList" class="aging-list"></div>
+          </div>
         </div>
 
         <!-- Feedback -->
