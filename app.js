@@ -965,11 +965,11 @@
     })).sort((a,b) => a.value - b.value);
     Charts.hBars('chartCarrierSpeed', speedData, { color: '#c9a84c', suffix: ' hrs', labelWidth: 80 });
 
-    // Feedback + card backs + all flip backs
+    // Feedback + card backs + tile data
     renderFeedback();
     populateKpiBackCards();
     populateGaugeFlipBacks();
-    setupChartTileFlips();
+    buildTileBacksData();
 
     } catch(e) { console.error('Stats render error:', e); }
   }
@@ -1252,14 +1252,19 @@
   // ══════════════════════════════════════════════
 
   // Click handlers for gauge tiles (set up once)
+  // Gauge tiles also open the detail modal
   document.querySelectorAll('.gauge-flip-tile').forEach(tile => {
     tile.addEventListener('click', () => {
-      // Populate backs on first flip if empty
-      const back = tile.querySelector('.chart-back');
-      if (back && !back.innerHTML.trim()) { try { populateGaugeFlipBacks(); } catch(e){} }
-      tile.classList.toggle('flipped');
+      const gaugeId = tile.dataset.gauge;
+      if (!Object.keys(tileBacksData).length) { try { buildTileBacksData(); } catch(e){} }
+      // Also check gauge-specific data from populateGaugeFlipBacks
+      if (!tileBacksData[gaugeId]) { try { buildGaugeData(); } catch(e){} }
+      const data = tileBacksData[gaugeId];
+      if (!data) return;
+      document.getElementById('tileDetailTitle').textContent = data.title;
+      document.getElementById('tileDetailBody').innerHTML = data.html;
+      document.getElementById('tileDetailModal').style.display = 'flex';
     });
-    tile.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();tile.click();} });
   });
 
   function populateGaugeFlipBacks() {
@@ -1312,20 +1317,30 @@
   //  CHART TILE FLIP — Dynamic injection
   // ══════════════════════════════════════════════
 
-  // Click handlers for ALL chart tiles — dead simple show/hide
+  // Chart tile click → opens detail modal (zero interference with canvas)
+  let tileBacksData = {};
+
   document.querySelectorAll('.chart-tile[data-chart]').forEach(tile => {
     tile.addEventListener('click', () => {
-      const overlay = tile.querySelector('.chart-back-overlay');
-      if (!overlay) return;
-      // Lazy-populate on first click
-      if (!overlay.innerHTML.trim()) { try { setupChartTileFlips(); } catch(e) { console.warn('Back populate error:', e); } }
-      tile.classList.toggle('showing-back');
+      const chartId = tile.dataset.chart;
+      // Populate backs if empty
+      if (!Object.keys(tileBacksData).length) { try { buildTileBacksData(); } catch(e) { console.warn(e); } }
+      const data = tileBacksData[chartId];
+      if (!data) return;
+      document.getElementById('tileDetailTitle').textContent = data.title;
+      document.getElementById('tileDetailBody').innerHTML = data.html;
+      document.getElementById('tileDetailModal').style.display = 'flex';
     });
   });
-  // Also populate immediately if we have data
-  try { setupChartTileFlips(); } catch(e) {}
 
-  function setupChartTileFlips() {
+  document.getElementById('tileDetailClose').addEventListener('click', () => {
+    document.getElementById('tileDetailModal').style.display = 'none';
+  });
+  document.getElementById('tileDetailModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+  });
+
+  function buildTileBacksData() {
     // Populate overlay backs with current data
     const now = new Date();
     const pending = packages.filter(p => p.status === 'pending');
@@ -1445,11 +1460,44 @@
       }
     };
 
-    // Populate overlay backs (no DOM reparenting — canvases stay intact)
-    Object.entries(backs).forEach(([canvasId, backData]) => {
-      const el = document.getElementById(canvasId + 'Back');
-      if (el) el.innerHTML = `<div class="chart-back-title">${backData.title}</div>${backData.html}`;
-    });
+    // Store for modal display (charts + gauges)
+    tileBacksData = backs;
+  }
+
+  function buildGaugeData() {
+    const now = new Date(), today = new Date(); today.setHours(0,0,0,0);
+    const pending = packages.filter(p => p.status === 'pending');
+    const pu = packages.filter(p => p.status === 'picked_up' && p.pickupTime);
+    const weekAgo = new Date(now.getTime()-7*86400000);
+    const sameDayPU = pu.filter(p=>{const ci=new Date(p.checkinTime);ci.setHours(0,0,0,0);const po=new Date(p.pickupTime);po.setHours(0,0,0,0);return ci.getTime()===po.getTime();});
+    let avgH=0; if(pu.length) avgH=pu.reduce((s,p)=>s+hBetween(p.checkinTime,p.pickupTime),0)/pu.length;
+    const m=(l,v)=>`<div class="chart-back-metric"><span>${l}</span><strong>${v}</strong></div>`;
+    const sec=(t,c)=>`<div class="chart-back-section"><div class="chart-back-section-title">${t}</div>${c}</div>`;
+
+    tileBacksData.gaugePickup = {
+      title: 'Same-Day Pickup — Deep Dive',
+      html: sec('Breakdown',m('Same-day pickups',sameDayPU.length)+m('Next-day',pu.filter(p=>{const h=hBetween(p.checkinTime,p.pickupTime);return h>=24&&h<48;}).length)+m('2+ days',pu.filter(p=>hBetween(p.checkinTime,p.pickupTime)>=48).length)+m('Total picked up',pu.length))+
+        sec('Speed',m('Fastest',pu.length?(()=>{const s=[...pu].sort((a,b)=>hBetween(a.checkinTime,a.pickupTime)-hBetween(b.checkinTime,b.pickupTime));const h=hBetween(s[0].checkinTime,s[0].pickupTime);return h<1?Math.round(h*60)+'m':h.toFixed(1)+'h';})():'—')+m('Slowest',pu.length?(()=>{const s=[...pu].sort((a,b)=>hBetween(b.checkinTime,b.pickupTime)-hBetween(a.checkinTime,a.pickupTime));const h=hBetween(s[0].checkinTime,s[0].pickupTime);return h<24?h.toFixed(1)+'h':(h/24).toFixed(1)+'d';})():'—')+m('Average',avgH<1?Math.round(avgH*60)+'m':avgH<24?avgH.toFixed(1)+'h':(avgH/24).toFixed(1)+'d'))+
+        `<div class="chart-back-insight">Above 70% same-day is excellent. Send a 5 PM reminder to residents with pending packages to boost this rate.</div>`
+    };
+    tileBacksData.gaugeCapacity = {
+      title: 'Daily Volume — Comparison',
+      html: sec('Today vs History',m('Today',packages.filter(p=>new Date(p.checkinTime)>=today).length+' packages')+m('Yesterday',packages.filter(p=>{const t=new Date(p.checkinTime);const y=new Date(today.getTime()-86400000);return t>=y&&t<today;}).length+' packages')+m('7-day avg',(packages.filter(p=>new Date(p.checkinTime)>=weekAgo).length/7).toFixed(1)+'/day'))+
+        `<div class="chart-back-insight">Track daily average over time. Rising month-over-month? Present the data to management to justify additional front desk coverage.</div>`
+    };
+    tileBacksData.gaugeFeedback = {
+      title: 'Resident Satisfaction — Detail',
+      html: sec('Ratings',[5,4,3,2,1].map(r=>m(r+' stars',feedback.filter(f=>f.rating===r).length+' reviews')).join(''))+
+        sec('Summary',m('Total reviews',feedback.length)+m('Average',feedback.length?(feedback.reduce((s,f)=>s+f.rating,0)/feedback.length).toFixed(1)+'/5':'—'))+
+        `<div class="chart-back-insight">Share 5-star shoutouts with the team. Aim for 4.5+ stars overall.</div>`
+    };
+    tileBacksData.gaugeOverdue = {
+      title: 'Overdue Packages — Action Required',
+      html: (()=>{const od=pending.filter(p=>hBetween(p.checkinTime,now.toISOString())>=48);
+        return sec('Overdue 48h+',od.length?od.slice(0,6).map(p=>m('#'+p.id+' '+p.residentName+' (Apt '+p.apartment+')',Math.round(hBetween(p.checkinTime,now.toISOString()))+'h ago')).join(''):m('Status','All clear — no overdue packages!'))+
+        sec('Risk Assessment',m('At risk (24-48h)',pending.filter(p=>{const h=hBetween(p.checkinTime,now.toISOString());return h>=24&&h<48;}).length)+m('Total pending',pending.length))+
+        `<div class="chart-back-insight">Call overdue residents directly. After 7 days with no pickup, escalate to the property manager.</div>`;})()
+    };
   }
 
   // ══════════════════════════════════════════════
