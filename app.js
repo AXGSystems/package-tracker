@@ -702,6 +702,19 @@
       {id:11,residentId:dr[3].id,residentName:'Kevin Nguyen',apartment:'201',carrier:'DHL',size:'Small',tracking:'1234567890',notes:'Perishable',loggedBy:'Alex M.',checkinTime:hoursAgo(1),status:'pending',pickupTime:null,signature:null,typedSignature:null,signatureMethod:null},
       {id:12,residentId:dr[17].id,residentName:'Carlos Reyes',apartment:'503',carrier:'Amazon',size:'Medium',tracking:'TBA556473829',notes:null,loggedBy:'Front Desk',checkinTime:hoursAgo(0.5),status:'pending',pickupTime:null,signature:null,typedSignature:null,signatureMethod:null},
       {id:13,residentId:dr[18].id,residentName:'Hannah Morgan',apartment:'601',carrier:'USPS',size:'Small',tracking:'9400128205559012345678',notes:'Medicine/Rx',loggedBy:'Jordan T.',checkinTime:daysAgo(3),status:'pending',pickupTime:null,signature:null,typedSignature:null,signatureMethod:null},
+      // Extra demo data for richer charts (spread across 14 days, varied hours)
+      {id:14,residentId:dr[1].id,residentName:'James Parker',apartment:'102',carrier:'Amazon',size:'Small',tracking:'TBA111222333',notes:null,loggedBy:'Alex M.',checkinTime:daysAgo(12),status:'picked_up',pickupTime:daysAgo(11.5),signature:null,typedSignature:'James Parker',signatureMethod:'type'},
+      {id:15,residentId:dr[6].id,residentName:'Sophia Martinez',apartment:'204',carrier:'UPS',size:'Medium',tracking:'1Z888777666',notes:'Fragile',loggedBy:'Jordan T.',checkinTime:daysAgo(11),status:'picked_up',pickupTime:daysAgo(10.8),signature:null,typedSignature:'Sophia Martinez',signatureMethod:'type'},
+      {id:16,residentId:dr[10].id,residentName:'Emily Chen',apartment:'304',carrier:'Amazon',size:'Large',tracking:'TBA444555666',notes:null,loggedBy:'Front Desk',checkinTime:daysAgo(10),status:'picked_up',pickupTime:daysAgo(9),signature:null,typedSignature:'Emily Chen',signatureMethod:'type'},
+      {id:17,residentId:dr[12].id,residentName:'Natalie Rivera',apartment:'402',carrier:'FedEx',size:'Small',tracking:'2222333444',notes:null,loggedBy:'Sam R.',checkinTime:daysAgo(10),status:'picked_up',pickupTime:daysAgo(9.5),signature:null,typedSignature:'Natalie Rivera',signatureMethod:'type'},
+      {id:18,residentId:dr[0].id,residentName:'Maria Santos',apartment:'101',carrier:'Amazon',size:'Medium',tracking:'TBA777888999',notes:'Multiple Boxes',loggedBy:'Chris P.',checkinTime:daysAgo(9),status:'picked_up',pickupTime:daysAgo(8.5),signature:null,typedSignature:'Maria Santos',signatureMethod:'type'},
+      {id:19,residentId:dr[16].id,residentName:'Yuki Tanaka',apartment:'502',carrier:'USPS',size:'Envelope',tracking:'9400999888777',notes:'Documents',loggedBy:'Front Desk',checkinTime:daysAgo(8),status:'picked_up',pickupTime:daysAgo(7.8),signature:null,typedSignature:'Yuki Tanaka',signatureMethod:'type'},
+      {id:20,residentId:dr[3].id,residentName:'Kevin Nguyen',apartment:'201',carrier:'Amazon',size:'Small',tracking:'TBA000111222',notes:null,loggedBy:'Taylor K.',checkinTime:daysAgo(8),status:'picked_up',pickupTime:daysAgo(7.5),signature:null,typedSignature:'Kevin Nguyen',signatureMethod:'type'},
+      {id:21,residentId:dr[13].id,residentName:"Brian O'Malley",apartment:'403',carrier:'UPS',size:'Large',tracking:'1Z555444333',notes:'Heavy, Furniture',loggedBy:'Alex M.',checkinTime:daysAgo(7),status:'picked_up',pickupTime:daysAgo(6),signature:null,typedSignature:"Brian O'Malley",signatureMethod:'type'},
+      {id:22,residentId:dr[19].id,residentName:'Robert Chen',apartment:'602',carrier:'Amazon',size:'Small',tracking:'TBA333222111',notes:null,loggedBy:'Front Desk',checkinTime:daysAgo(7),status:'picked_up',pickupTime:daysAgo(6.8),signature:null,typedSignature:'Robert Chen',signatureMethod:'type'},
+      {id:23,residentId:dr[4].id,residentName:'Rachel Kim',apartment:'202',carrier:'FedEx',size:'Medium',tracking:'9999888777',notes:'Electronics',loggedBy:'Jordan T.',checkinTime:daysAgo(6),status:'picked_up',pickupTime:daysAgo(5.5),signature:null,typedSignature:'Rachel Kim',signatureMethod:'type'},
+      {id:24,residentId:dr[2].id,residentName:'Aisha Thompson',apartment:'103',carrier:'Amazon',size:'Small',tracking:'TBA666555444',notes:null,loggedBy:'Sam R.',checkinTime:daysAgo(6),status:'picked_up',pickupTime:daysAgo(5.8),signature:null,typedSignature:'Aisha Thompson',signatureMethod:'type'},
+      {id:25,residentId:dr[7].id,residentName:'Tyler Brooks',apartment:'301',carrier:'Amazon',size:'Medium',tracking:'TBA999000111',notes:null,loggedBy:'Front Desk',checkinTime:daysAgo(4),status:'picked_up',pickupTime:daysAgo(3.5),signature:null,typedSignature:'Tyler Brooks',signatureMethod:'type'},
     ];
     save(KEYS.packages,packages);
   }
@@ -874,15 +887,10 @@
     packages.forEach(p => cc[p.carrier] = (cc[p.carrier] || 0) + 1);
     Charts.donut('chartCarrier', Object.entries(cc).sort((a,b)=>b[1]-a[1]).map(([label,value])=>({label,value})), { centerLabel: 'Packages' });
 
-    // ── PEAK DELIVERY HOURS ──
+    // ── PEAK DELIVERY CLOCK ──
     const hourCounts = new Array(24).fill(0);
     packages.forEach(p => { hourCounts[new Date(p.checkinTime).getHours()]++; });
-    const hourData = [];
-    for (let h = 7; h <= 21; h++) {
-      const label = h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : (h - 12) + 'pm';
-      hourData.push({ label, value: hourCounts[h] });
-    }
-    Charts.bars('chartHours', hourData);
+    Charts.clockFace('chartHours', hourCounts);
 
     // ── DAY OF WEEK HEATMAP ──
     const dayCount = [0,0,0,0,0,0,0];
@@ -1138,6 +1146,17 @@
   // ══════════════════════════════════════════════
 
   seedDemo();
+  // Seed demo feedback if empty
+  if(!feedback.length && packages.length>5){
+    feedback=[
+      {id:crypto.randomUUID(),name:'Maria Santos',rating:5,text:'Alex was so helpful! Always has my packages ready.',time:daysAgo(4)},
+      {id:crypto.randomUUID(),name:'Tyler Brooks',rating:4,text:'Quick and easy pickup process.',time:daysAgo(3)},
+      {id:crypto.randomUUID(),name:'Rachel Kim',rating:5,text:'Love the new system! So much better than the clipboard.',time:daysAgo(2)},
+      {id:crypto.randomUUID(),name:'Marcus Johnson',rating:5,text:null,time:daysAgo(1)},
+      {id:crypto.randomUUID(),name:'Darnell White',rating:4,text:'Front desk team is great.',time:hoursAgo(12)},
+    ];
+    save(KEYS.feedback,feedback);
+  }
   renderResidents();
   renderDashboard();
   renderShiftNotes();

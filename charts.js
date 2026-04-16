@@ -157,7 +157,17 @@ const Charts = (function(){
     const cv = document.getElementById(canvasId);
     if (!cv) return;
     const { cx, w, h } = dpr(cv);
-    if (data.length < 2) return;
+    if (data.length < 2) {
+      cx.fillStyle = COLORS.muted; cx.font = '13px Inter'; cx.textAlign = 'center';
+      cx.fillText('Not enough data yet', w/2, h/2);
+      return;
+    }
+    const totalVal = data.reduce((s,d) => s + d.value, 0);
+    if (totalVal === 0) {
+      cx.fillStyle = COLORS.muted; cx.font = '13px Inter'; cx.textAlign = 'center';
+      cx.fillText('No packages in this period', w/2, h/2);
+      return;
+    }
 
     const maxVal = Math.max(...data.map(d => d.value), 1);
     const padL = 35, padR = 15, padT = 15, padB = 30;
@@ -404,5 +414,128 @@ const Charts = (function(){
     requestAnimationFrame(draw);
   }
 
-  return { donut, bars, line, heatmap, hBars, gauge, COLORS };
+  // ── Clock Face Chart (peak hours) ──
+  function clockFace(canvasId, hourData) {
+    // hourData: array of 24 values (index 0 = midnight)
+    const cv = document.getElementById(canvasId);
+    if (!cv) return;
+    const { cx, w, h } = dpr(cv);
+    const centerX = w / 2, centerY = h / 2;
+    const radius = Math.min(w, h) / 2 - 30;
+    const maxVal = Math.max(...hourData, 1);
+    const duration = 1000;
+    const start = performance.now();
+
+    function draw(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      cx.clearRect(0, 0, w, h);
+
+      // Clock face background
+      cx.beginPath();
+      cx.arc(centerX, centerY, radius + 8, 0, Math.PI * 2);
+      cx.fillStyle = 'rgba(0,0,0,0.02)';
+      cx.fill();
+
+      cx.beginPath();
+      cx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      cx.fillStyle = 'rgba(255,255,255,0.5)';
+      cx.fill();
+      cx.strokeStyle = 'rgba(0,0,0,0.06)';
+      cx.lineWidth = 1;
+      cx.stroke();
+
+      // Inner circle
+      cx.beginPath();
+      cx.arc(centerX, centerY, radius * 0.25, 0, Math.PI * 2);
+      cx.fillStyle = 'rgba(255,255,255,0.8)';
+      cx.fill();
+      cx.stroke();
+
+      // Hour segments (12-hour clock, combine AM+PM)
+      for (let h = 0; h < 12; h++) {
+        const amVal = hourData[h] || 0;
+        const pmVal = hourData[h + 12] || 0;
+        const totalForHour = amVal + pmVal;
+        const intensity = totalForHour / maxVal;
+        const angleStart = ((h - 3) / 12) * Math.PI * 2;
+        const angleEnd = ((h - 3 + 1) / 12) * Math.PI * 2;
+
+        // Segment fill based on intensity
+        if (totalForHour > 0) {
+          const barRadius = radius * 0.25 + (radius * 0.7) * intensity * ease;
+          cx.beginPath();
+          cx.moveTo(centerX, centerY);
+          cx.arc(centerX, centerY, barRadius, angleStart + 0.02, angleEnd - 0.02);
+          cx.closePath();
+
+          // Color gradient: gold for low, maroon for high
+          const r = Math.round(201 + (124 - 201) * intensity);
+          const g = Math.round(168 + (45 - 168) * intensity);
+          const b = Math.round(76 + (61 - 76) * intensity);
+          cx.fillStyle = `rgba(${r},${g},${b},${0.2 + intensity * 0.6})`;
+          cx.shadowColor = `rgba(${r},${g},${b},0.3)`;
+          cx.shadowBlur = 8;
+          cx.fill();
+          cx.shadowBlur = 0;
+        }
+
+        // Hour marks
+        const markAngle = ((h - 3) / 12) * Math.PI * 2;
+        const markX1 = centerX + Math.cos(markAngle) * (radius - 8);
+        const markY1 = centerY + Math.sin(markAngle) * (radius - 8);
+        const markX2 = centerX + Math.cos(markAngle) * radius;
+        const markY2 = centerY + Math.sin(markAngle) * radius;
+        cx.beginPath();
+        cx.moveTo(markX1, markY1);
+        cx.lineTo(markX2, markY2);
+        cx.strokeStyle = 'rgba(0,0,0,0.12)';
+        cx.lineWidth = 1.5;
+        cx.stroke();
+
+        // Hour labels
+        const lblR = radius + 18;
+        const lblAngle = ((h - 3 + 0.5) / 12) * Math.PI * 2;
+        const lblX = centerX + Math.cos(lblAngle) * lblR;
+        const lblY = centerY + Math.sin(lblAngle) * lblR;
+        const hourLabel = h === 0 ? '12' : String(h);
+        cx.fillStyle = totalForHour > 0 ? COLORS.text : COLORS.muted;
+        cx.font = totalForHour > 0 ? 'bold 11px Inter' : '10px Inter';
+        cx.textAlign = 'center';
+        cx.textBaseline = 'middle';
+        cx.fillText(hourLabel, lblX, lblY);
+
+        // Value inside segment
+        if (totalForHour > 0 && ease > 0.5) {
+          const valR = radius * 0.25 + (radius * 0.35) * Math.min(intensity, 0.8);
+          const valAngle = ((h - 3 + 0.5) / 12) * Math.PI * 2;
+          const valX = centerX + Math.cos(valAngle) * valR;
+          const valY = centerY + Math.sin(valAngle) * valR;
+          cx.fillStyle = intensity > 0.5 ? '#fff' : COLORS.text;
+          cx.font = 'bold 12px Inter';
+          cx.fillText(totalForHour, valX, valY);
+        }
+      }
+
+      // Center label
+      cx.fillStyle = COLORS.text;
+      cx.font = 'bold 11px Inter';
+      cx.textAlign = 'center';
+      cx.textBaseline = 'middle';
+      cx.fillText('PEAK', centerX, centerY - 5);
+      cx.fillStyle = COLORS.muted;
+      cx.font = '9px Inter';
+      cx.fillText('HOURS', centerX, centerY + 7);
+
+      // AM/PM indicators
+      cx.fillStyle = COLORS.muted;
+      cx.font = '9px Inter';
+      cx.fillText('AM+PM combined', centerX, h - 8);
+
+      if (progress < 1) requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  }
+
+  return { donut, bars, line, heatmap, hBars, gauge, clockFace, COLORS };
 })();
