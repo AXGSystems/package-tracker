@@ -328,13 +328,19 @@ body {
   font-weight: 600;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
   flex: 1;
   justify-content: center;
   font-family: inherit;
 }
 
-.tab-btn:hover { background: var(--glass-hover); color: var(--text-secondary); }
+.tab-btn:hover {
+  background: var(--glass-hover);
+  color: var(--text-secondary);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+.tab-btn:active { transform: translateY(0) scale(0.97); transition-duration: 0.08s; }
 
 /* ── Per-tab colors (idle tint + active glow) ── */
 .tab-btn[data-tab="log"]        { background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.15); color: var(--gold-dark); }
@@ -448,9 +454,10 @@ input:focus, select:focus {
 }
 .btn-gold:hover {
   background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
-  box-shadow: 0 6px 24px rgba(201,168,76,0.4);
-  transform: translateY(-1px);
+  box-shadow: 0 10px 32px rgba(201,168,76,0.45);
+  transform: translateY(-4px) scale(1.02);
 }
+.btn-gold:active { transform: translateY(-1px) scale(0.98); transition-duration: 0.08s; }
 
 .btn-blue {
   background: linear-gradient(135deg, var(--blue) 0%, var(--blue-light) 100%);
@@ -609,12 +616,12 @@ input:focus, select:focus {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
-  padding: 0.85rem 0.5rem;
-  min-height: 82px;
+  gap: 0.35rem;
+  padding: 0.9rem 0.5rem;
+  min-height: 90px;
   background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 2px solid rgba(0,0,0,0.05);
   border-radius: var(--r);
   color: var(--text-muted);
@@ -622,24 +629,39 @@ input:focus, select:focus {
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s, border-color 0.2s, background 0.2s;
   box-shadow: 0 2px 10px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.5);
 }
 
-.carrier-logo-text {
-  font-family: 'Inter', sans-serif;
-  font-size: 1rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  line-height: 1;
+.carrier-btn:hover {
+  transform: translateY(-6px) scale(1.04);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.carrier-btn:active {
+  transform: translateY(-2px) scale(0.98);
+  transition-duration: 0.08s;
+}
+
+.carrier-logo-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 8px;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.carrier-btn:hover .carrier-logo-img {
+  transform: scale(1.15);
 }
 
 .carrier-label {
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  transition: color 0.2s;
 }
 
 .carrier-icon { font-size: 1.4rem; }
@@ -695,11 +717,12 @@ input:focus, select:focus {
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
 
 .size-btn:last-child { border-right: none; }
-.size-btn:active { background: var(--bg); }
+.size-btn:hover { background: rgba(0,0,0,0.03); transform: translateY(-2px); }
+.size-btn:active { background: var(--bg); transform: translateY(0); }
 
 .size-btn.selected {
   background: var(--maroon-bg);
@@ -725,11 +748,12 @@ input:focus, select:focus {
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
   -webkit-tap-highlight-color: transparent;
 }
 
-.chip:active { transform: scale(0.95); }
+.chip:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.chip:active { transform: scale(0.93); }
 
 .chip.selected {
   background: var(--maroon-bg);
@@ -773,10 +797,11 @@ input:focus, select:focus {
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
 
-.staff-btn:active { transform: scale(0.96); }
+.staff-btn:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 8px 22px rgba(0,0,0,0.08); }
+.staff-btn:active { transform: scale(0.95); }
 
 .staff-btn.selected {
   background: var(--blue-bg);
@@ -859,15 +884,15 @@ input:focus, select:focus {
     0 8px 32px rgba(0,0,0,0.06),
     0 2px 8px rgba(0,0,0,0.03),
     inset 0 1px 0 rgba(255,255,255,0.5);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
 }
 
 .panel-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   box-shadow:
-    0 16px 48px rgba(0,0,0,0.08),
-    0 4px 12px rgba(0,0,0,0.04),
-    inset 0 1px 0 rgba(255,255,255,0.5);
+    0 20px 60px rgba(0,0,0,0.10),
+    0 6px 16px rgba(0,0,0,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 /* Stat cards get deeper glass */
@@ -880,9 +905,9 @@ input:focus, select:focus {
   padding: 0.85rem;
   text-align: center;
   box-shadow: 0 4px 20px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
 }
-.stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7); }
+.stat-card:hover { transform: translateY(-6px) scale(1.03); box-shadow: 0 16px 44px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8); }
 
 /* ══════════════════════════════════════════════
    STATS DASHBOARD — KPI Tiles (colorful, upper)
@@ -907,12 +932,12 @@ input:focus, select:focus {
   box-shadow:
     0 8px 32px rgba(0,0,0,0.08),
     inset 0 1px 0 rgba(255,255,255,0.4);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
 }
 
 .kpi-tile:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.5);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 .kpi-gold {
@@ -966,12 +991,12 @@ input:focus, select:focus {
     0 2px 8px rgba(0,0,0,0.03),
     inset 0 -2px 8px rgba(0,0,0,0.02),
     inset 0 1px 0 rgba(255,255,255,0.4);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
 }
 
 .chart-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.09), inset 0 1px 0 rgba(255,255,255,0.5);
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.11), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 .chart-tile-wide { grid-column: span 1; }
@@ -1169,10 +1194,11 @@ tbody tr:hover { background: rgba(201,168,76,0.04); }
   margin-bottom: 0.5rem;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.4);
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
 
-.pkg-item:active { transform: scale(0.99); }
+.pkg-item:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 12px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5); }
+.pkg-item:active { transform: translateY(-1px) scale(0.99); }
 
 .pkg-item.selected {
   border-color: var(--gold);
@@ -1632,10 +1658,10 @@ textarea:focus { outline:none; border-color: var(--gold); box-shadow: 0 0 0 3px 
   border-radius: var(--r);
   overflow: hidden;
   box-shadow: 0 6px 28px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
 }
 
-.carrier-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.carrier-card:hover { transform: translateY(-6px) scale(1.015); box-shadow: 0 18px 50px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.6); }
 
 .carrier-card-header {
   display: flex;
