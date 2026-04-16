@@ -389,6 +389,7 @@
   // Submit
   document.getElementById('logForm').addEventListener('submit',e=>{
     e.preventDefault();
+    try {
     const resId=document.getElementById('log-resident-id').value;
     const res=residents.find(r=>r.id===resId);
     if(!res){toast('Select a resident','error');return;}
@@ -412,7 +413,7 @@
     if(res.email) sync('sendNotification',{email:res.email,residentName:res.name,apartment:res.apartment,carrier:pkg.carrier,size:pkg.size,packageId:pkg.id});
 
     showSuccess('Package Logged!',`#${pkg.id} — ${res.name} (Apt ${res.apartment}) — ${logCarrier} ${logSize}\nLogged: ${fmtFull(pkg.checkinTime)}`);
-    launchConfetti(); setTimeout(stopConfetti, 3000);
+    try { launchConfetti(); setTimeout(stopConfetti, 3000); } catch(e) { console.warn('Confetti error:', e); }
     if(res.email) toast(`Notification sent to ${res.email}`,'info');
 
     // Undo support
@@ -428,6 +429,7 @@
     document.getElementById('log-notes-custom').value='';
     selectedNotes.clear();
     document.querySelectorAll('.chip.selected').forEach(c=>c.classList.remove('selected'));
+    } catch(err) { console.error('Log submit error:', err); toast('Error: '+err.message,'error'); }
   });
 
   // ── UNDO (Round 6) ──
