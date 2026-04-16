@@ -877,6 +877,9 @@
     const overdue = pending.filter(p => hBetween(p.checkinTime, now.toISOString()) >= 48);
     Charts.gauge('gaugeOverdue', overdue.length, Math.max(pending.length, 1), { color: overdue.length > 0 ? '#dc2626' : '#16a34a', label: overdue.length + '', subLabel: overdue.length ? 'need follow-up' : 'all clear' });
 
+    // ── INJECT FLIP STRUCTURE BEFORE DRAWING (prevents canvas wipe) ──
+    setupChartTileFlips();
+
     // ── VOLUME LINE — 14 DAYS ──
     const volData = [];
     for (let i = 13; i >= 0; i--) {
@@ -965,10 +968,9 @@
     })).sort((a,b) => a.value - b.value);
     Charts.hBars('chartCarrierSpeed', speedData, { color: '#c9a84c', suffix: ' hrs', labelWidth: 80 });
 
-    // Feedback + card backs + chart flips + gauge flips
+    // Feedback + card backs + gauge flips (chart flips injected above before drawing)
     renderFeedback();
     populateKpiBackCards();
-    setupChartTileFlips();
     populateGaugeFlipBacks();
 
     } catch(e) { console.error('Stats render error:', e); }
