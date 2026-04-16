@@ -293,5 +293,116 @@ const Charts = (function(){
     requestAnimationFrame(draw);
   }
 
-  return { donut, bars, line, heatmap, COLORS };
+  // ── Horizontal Bar Chart (for rankings) ──
+  function hBars(canvasId, data, opts = {}) {
+    const cv = document.getElementById(canvasId);
+    if (!cv) return;
+    const { cx, w, h } = dpr(cv);
+    if (!data.length) return;
+
+    const maxVal = Math.max(...data.map(d => d.value), 1);
+    const barH = Math.min(28, (h - 10) / data.length - 6);
+    const padL = opts.labelWidth || 100;
+    const chartW = w - padL - 50;
+    const duration = 700;
+    const start = performance.now();
+
+    function draw(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      cx.clearRect(0, 0, w, h);
+
+      data.forEach((d, i) => {
+        const y = 5 + i * (barH + 6);
+        const barW = (d.value / maxVal) * chartW * ease;
+        const color = opts.color || COLORS.palette[i % COLORS.palette.length];
+
+        // Label
+        cx.fillStyle = COLORS.text;
+        cx.font = '12px Inter';
+        cx.textAlign = 'right';
+        cx.textBaseline = 'middle';
+        cx.fillText(d.label, padL - 8, y + barH / 2);
+
+        // Bar with glow
+        cx.shadowColor = color;
+        cx.shadowBlur = 8;
+        const grad = cx.createLinearGradient(padL, y, padL + barW, y);
+        grad.addColorStop(0, color);
+        grad.addColorStop(1, color + '88');
+        cx.fillStyle = grad;
+        cx.beginPath();
+        cx.roundRect(padL, y, Math.max(barW, 2), barH, [0, 4, 4, 0]);
+        cx.fill();
+        cx.shadowBlur = 0;
+
+        // Value
+        if (ease > 0.4) {
+          cx.fillStyle = COLORS.text;
+          cx.font = 'bold 11px Inter';
+          cx.textAlign = 'left';
+          cx.fillText(d.value + (opts.suffix || ''), padL + barW + 8, y + barH / 2);
+        }
+      });
+
+      if (progress < 1) requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  }
+
+  // ── Gauge / Percentage Ring ──
+  function gauge(canvasId, value, max, opts = {}) {
+    const cv = document.getElementById(canvasId);
+    if (!cv) return;
+    const { cx, w, h } = dpr(cv);
+    const centerX = w / 2, centerY = h / 2 + 5;
+    const radius = Math.min(w, h) / 2 - 16;
+    const lineW = 12;
+    const pct = Math.min(value / (max || 1), 1);
+    const color = opts.color || COLORS.gold;
+    const duration = 800;
+    const start = performance.now();
+
+    function draw(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      cx.clearRect(0, 0, w, h);
+
+      // Background arc
+      cx.beginPath();
+      cx.arc(centerX, centerY, radius, Math.PI * 0.8, Math.PI * 2.2);
+      cx.strokeStyle = 'rgba(0,0,0,0.05)';
+      cx.lineWidth = lineW;
+      cx.lineCap = 'round';
+      cx.stroke();
+
+      // Value arc with glow
+      const endAngle = Math.PI * 0.8 + (Math.PI * 1.4) * pct * ease;
+      cx.shadowColor = color;
+      cx.shadowBlur = 12;
+      cx.beginPath();
+      cx.arc(centerX, centerY, radius, Math.PI * 0.8, endAngle);
+      cx.strokeStyle = color;
+      cx.lineWidth = lineW;
+      cx.lineCap = 'round';
+      cx.stroke();
+      cx.shadowBlur = 0;
+
+      // Center text
+      cx.fillStyle = COLORS.text;
+      cx.font = 'bold 24px Inter';
+      cx.textAlign = 'center';
+      cx.textBaseline = 'middle';
+      cx.fillText(opts.label || Math.round(pct * 100 * ease) + '%', centerX, centerY - 4);
+
+      cx.fillStyle = COLORS.muted;
+      cx.font = '10px Inter';
+      cx.fillText(opts.subLabel || '', centerX, centerY + 16);
+
+      if (progress < 1) requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  }
+
+  return { donut, bars, line, heatmap, hBars, gauge, COLORS };
 })();

@@ -378,33 +378,60 @@
 
       <!-- ═══ STATS DASHBOARD ═══ -->
       <section class="tab-panel" id="tab-stats">
-        <!-- Row 1: Big KPI tiles (colorful, upper) -->
-        <div class="stats-kpi-row">
+
+        <!-- Row 1: KPI Tiles -->
+        <div class="stats-kpi-row stats-kpi-6">
           <div class="kpi-tile kpi-gold">
             <div class="kpi-value" id="kpiTotal">0</div>
             <div class="kpi-label">Total Packages</div>
-            <div class="kpi-sub" id="kpiTotalSub">All time</div>
+            <div class="kpi-sub">All time</div>
           </div>
           <div class="kpi-tile kpi-blue">
             <div class="kpi-value" id="kpiToday2">0</div>
             <div class="kpi-label">Today</div>
-            <div class="kpi-sub" id="kpiTodaySub">Logged today</div>
+            <div class="kpi-sub">Logged today</div>
           </div>
           <div class="kpi-tile kpi-maroon">
-            <div class="kpi-value" id="kpiPickupRate">0%</div>
-            <div class="kpi-label">Pickup Rate</div>
-            <div class="kpi-sub">Same-day pickups</div>
+            <div class="kpi-value" id="kpiPending2">0</div>
+            <div class="kpi-label">Pending Now</div>
+            <div class="kpi-sub">Awaiting pickup</div>
           </div>
           <div class="kpi-tile kpi-green">
+            <div class="kpi-value" id="kpiPickupRate">0%</div>
+            <div class="kpi-label">Same-Day Rate</div>
+            <div class="kpi-sub">Picked up same day</div>
+          </div>
+          <div class="kpi-tile kpi-purple">
             <div class="kpi-value" id="kpiAvg2">—</div>
             <div class="kpi-label">Avg Pickup</div>
             <div class="kpi-sub">Time to collect</div>
           </div>
+          <div class="kpi-tile kpi-orange">
+            <div class="kpi-value" id="kpiWeekly">0</div>
+            <div class="kpi-label">This Week</div>
+            <div class="kpi-sub">Last 7 days</div>
+          </div>
         </div>
 
-        <!-- Row 2: Charts -->
+        <!-- Row 2: Gauges -->
+        <div class="stats-chart-row stats-chart-3">
+          <div class="chart-tile">
+            <h3>Same-Day Pickup Rate</h3>
+            <canvas id="gaugePickup" style="width:100%;height:140px;"></canvas>
+          </div>
+          <div class="chart-tile">
+            <h3>Capacity Today</h3>
+            <canvas id="gaugeCapacity" style="width:100%;height:140px;"></canvas>
+          </div>
+          <div class="chart-tile">
+            <h3>Feedback Score</h3>
+            <canvas id="gaugeFeedback" style="width:100%;height:140px;"></canvas>
+          </div>
+        </div>
+
+        <!-- Row 3: Volume + Carrier -->
         <div class="stats-chart-row">
-          <div class="chart-tile chart-tile-wide">
+          <div class="chart-tile" style="grid-column:span 1;">
             <h3>Package Volume — Last 14 Days</h3>
             <canvas id="chartVolume" style="width:100%;height:220px;"></canvas>
           </div>
@@ -415,27 +442,64 @@
           </div>
         </div>
 
-        <!-- Row 3: More charts (lower, deeper shading) -->
+        <!-- Row 4: Peak Hours + Day of Week -->
         <div class="stats-chart-row">
           <div class="chart-tile">
-            <h3>Size Distribution</h3>
-            <canvas id="chartSize" style="width:100%;height:180px;"></canvas>
+            <h3>Peak Delivery Hours</h3>
+            <p class="chart-subtitle">Helps schedule front desk coverage</p>
+            <canvas id="chartHours" style="width:100%;height:220px;"></canvas>
           </div>
-          <div class="chart-tile chart-tile-wide">
+          <div class="chart-tile">
             <h3>Busiest Days of the Week</h3>
+            <p class="chart-subtitle">Plan staffing levels</p>
             <canvas id="chartDays" style="width:100%;height:100px;"></canvas>
           </div>
         </div>
 
-        <!-- Row 4: Feedback & Shoutouts -->
+        <!-- Row 5: Size + Staff Performance -->
+        <div class="stats-chart-row">
+          <div class="chart-tile">
+            <h3>Size Distribution</h3>
+            <p class="chart-subtitle">Storage planning &amp; space allocation</p>
+            <canvas id="chartSize" style="width:100%;height:180px;"></canvas>
+          </div>
+          <div class="chart-tile">
+            <h3>Staff Activity</h3>
+            <p class="chart-subtitle">Packages logged per team member</p>
+            <canvas id="chartStaff" style="width:100%;height:200px;"></canvas>
+          </div>
+        </div>
+
+        <!-- Row 6: Top Residents + Aging -->
+        <div class="stats-chart-row">
+          <div class="chart-tile">
+            <h3>Busiest Residents</h3>
+            <p class="chart-subtitle">Top 8 by package volume</p>
+            <canvas id="chartResidents" style="width:100%;height:260px;"></canvas>
+          </div>
+          <div class="chart-tile">
+            <h3>Pending Package Aging</h3>
+            <p class="chart-subtitle">How long packages sit uncollected</p>
+            <canvas id="chartAging" style="width:100%;height:200px;"></canvas>
+          </div>
+        </div>
+
+        <!-- Row 7: Carrier Pickup Speed -->
+        <div class="chart-tile feedback-tile">
+          <h3>Avg Pickup Time by Carrier</h3>
+          <p class="chart-subtitle">Which carriers' packages get picked up fastest?</p>
+          <canvas id="chartCarrierSpeed" style="width:100%;height:180px;"></canvas>
+        </div>
+
+        <!-- Row 8: Feedback & Shoutouts -->
         <div class="chart-tile feedback-tile">
           <h3>Resident Feedback &amp; Shoutouts</h3>
           <div id="feedbackList" class="feedback-list"></div>
           <p class="empty-state" id="feedbackEmpty" style="padding:1.5rem;">No feedback yet.</p>
         </div>
 
-        <!-- Print button -->
-        <div style="text-align:center;margin-top:1rem;">
+        <!-- Print -->
+        <div style="text-align:center;margin:1.25rem 0;">
           <button class="btn btn-outline" id="printLogBtn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print Full Log

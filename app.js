@@ -823,10 +823,14 @@
 
   function renderStats() {
     if (typeof Charts === 'undefined') return;
+    try {
 
-    // KPIs
+    const now = new Date();
     const today = new Date(); today.setHours(0,0,0,0);
+    const weekAgo = new Date(now.getTime() - 7*86400000);
     const todayPkgs = packages.filter(p => new Date(p.checkinTime) >= today);
+    const weekPkgs = packages.filter(p => new Date(p.checkinTime) >= weekAgo);
+    const pending = packages.filter(p => p.status === 'pending');
     const pu = packages.filter(p => p.status === 'picked_up' && p.pickupTime);
     const sameDayPU = pu.filter(p => {
       const ci = new Date(p.checkinTime); ci.setHours(0,0,0,0);
@@ -834,18 +838,28 @@
       return ci.getTime() === po.getTime();
     });
     const rate = pu.length ? Math.round((sameDayPU.length / pu.length) * 100) : 0;
-    let avg = '—';
+    let avgHours = 0;
+    let avgLabel = '—';
     if (pu.length) {
-      const t = pu.reduce((s, p) => s + hBetween(p.checkinTime, p.pickupTime), 0) / pu.length;
-      avg = t < 1 ? Math.round(t * 60) + 'm' : t < 24 ? t.toFixed(1) + 'h' : (t / 24).toFixed(1) + 'd';
+      avgHours = pu.reduce((s, p) => s + hBetween(p.checkinTime, p.pickupTime), 0) / pu.length;
+      avgLabel = avgHours < 1 ? Math.round(avgHours * 60) + 'm' : avgHours < 24 ? avgHours.toFixed(1) + 'h' : (avgHours / 24).toFixed(1) + 'd';
     }
 
+    // ── KPI TILES ──
     document.getElementById('kpiTotal').textContent = packages.length;
     document.getElementById('kpiToday2').textContent = todayPkgs.length;
+    document.getElementById('kpiPending2').textContent = pending.length;
     document.getElementById('kpiPickupRate').textContent = rate + '%';
-    document.getElementById('kpiAvg2').textContent = avg;
+    document.getElementById('kpiAvg2').textContent = avgLabel;
+    document.getElementById('kpiWeekly').textContent = weekPkgs.length;
 
-    // Volume line chart — last 14 days
+    // ── GAUGES ──
+    Charts.gauge('gaugePickup', rate, 100, { color: '#16a34a', subLabel: 'Same-day' });
+    Charts.gauge('gaugeCapacity', todayPkgs.length, Math.max(todayPkgs.length, 20), { color: '#1e5fb3', label: todayPkgs.length + '', subLabel: 'packages today' });
+    const fbAvg = feedback.length ? (feedback.reduce((s,f)=>s+f.rating,0)/feedback.length) : 0;
+    Charts.gauge('gaugeFeedback', fbAvg, 5, { color: '#c9a84c', label: fbAvg ? fbAvg.toFixed(1) + '/5' : '—', subLabel: feedback.length + ' reviews' });
+
+    // ── VOLUME LINE — 14 DAYS ──
     const volData = [];
     for (let i = 13; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
@@ -855,26 +869,72 @@
     }
     Charts.line('chartVolume', volData, { color: '#c9a84c' });
 
-    // Carrier donut
+    // ── CARRIER DONUT ──
     const cc = {};
     packages.forEach(p => cc[p.carrier] = (cc[p.carrier] || 0) + 1);
-    const carrierData = Object.entries(cc).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
-    Charts.donut('chartCarrier', carrierData, { centerLabel: 'Packages' });
+    Charts.donut('chartCarrier', Object.entries(cc).sort((a,b)=>b[1]-a[1]).map(([label,value])=>({label,value})), { centerLabel: 'Packages' });
 
-    // Size bar chart
+    // ── PEAK DELIVERY HOURS ──
+    const hourCounts = new Array(24).fill(0);
+    packages.forEach(p => { hourCounts[new Date(p.checkinTime).getHours()]++; });
+    const hourData = [];
+    for (let h = 7; h <= 21; h++) {
+      const label = h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : (h - 12) + 'pm';
+      hourData.push({ label, value: hourCounts[h] });
+    }
+    Charts.bars('chartHours', hourData);
+
+    // ── DAY OF WEEK HEATMAP ──
+    const dayCount = [0,0,0,0,0,0,0];
+    packages.forEach(p => { dayCount[new Date(p.checkinTime).getDay()]++; });
+    Charts.heatmap('chartDays', ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((l,i)=>({label:l,value:dayCount[i]})));
+
+    // ── SIZE BARS ──
     const sc = {};
     packages.forEach(p => sc[p.size] = (sc[p.size] || 0) + 1);
-    const sizeData = ['Envelope', 'Small', 'Medium', 'Large', 'Oversized'].filter(s => sc[s]).map(s => ({ label: s, value: sc[s] || 0 }));
-    Charts.bars('chartSize', sizeData);
+    Charts.bars('chartSize', ['Envelope','Small','Medium','Large','Oversized'].filter(s=>sc[s]).map(s=>({label:s,value:sc[s]||0})));
 
-    // Day of week heatmap
-    const dayCount = [0, 0, 0, 0, 0, 0, 0];
-    packages.forEach(p => { dayCount[new Date(p.checkinTime).getDay()]++; });
-    const dayData = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label, i) => ({ label, value: dayCount[i] }));
-    Charts.heatmap('chartDays', dayData);
+    // ── STAFF ACTIVITY ──
+    const staffCounts = {};
+    packages.forEach(p => { staffCounts[p.loggedBy] = (staffCounts[p.loggedBy] || 0) + 1; });
+    Charts.hBars('chartStaff', Object.entries(staffCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value})), { color: '#1e5fb3', suffix: ' pkgs' });
 
-    // Render feedback
+    // ── BUSIEST RESIDENTS ──
+    const resCounts = {};
+    packages.forEach(p => { resCounts[p.residentName] = (resCounts[p.residentName] || 0) + 1; });
+    Charts.hBars('chartResidents', Object.entries(resCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value})), { color: '#7c2d3d', suffix: ' pkgs', labelWidth: 130 });
+
+    // ── PENDING AGING ──
+    const agingBuckets = { '< 2h': 0, '2-6h': 0, '6-12h': 0, '12-24h': 0, '1-2 days': 0, '2+ days': 0 };
+    pending.forEach(p => {
+      const h = hBetween(p.checkinTime, now.toISOString());
+      if (h < 2) agingBuckets['< 2h']++;
+      else if (h < 6) agingBuckets['2-6h']++;
+      else if (h < 12) agingBuckets['6-12h']++;
+      else if (h < 24) agingBuckets['12-24h']++;
+      else if (h < 48) agingBuckets['1-2 days']++;
+      else agingBuckets['2+ days']++;
+    });
+    Charts.bars('chartAging', Object.entries(agingBuckets).map(([label,value])=>({label,value})));
+
+    // ── CARRIER PICKUP SPEED ──
+    const carrierSpeed = {};
+    const carrierSpeedCount = {};
+    pu.forEach(p => {
+      const h = hBetween(p.checkinTime, p.pickupTime);
+      carrierSpeed[p.carrier] = (carrierSpeed[p.carrier] || 0) + h;
+      carrierSpeedCount[p.carrier] = (carrierSpeedCount[p.carrier] || 0) + 1;
+    });
+    const speedData = Object.keys(carrierSpeed).map(c => ({
+      label: c,
+      value: Math.round(carrierSpeed[c] / carrierSpeedCount[c] * 10) / 10
+    })).sort((a,b) => a.value - b.value);
+    Charts.hBars('chartCarrierSpeed', speedData, { color: '#c9a84c', suffix: ' hrs', labelWidth: 80 });
+
+    // Feedback
     renderFeedback();
+
+    } catch(e) { console.error('Stats render error:', e); }
   }
 
   // Re-render charts when stats tab is clicked
