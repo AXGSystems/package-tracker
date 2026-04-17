@@ -726,10 +726,113 @@ input:focus, select:focus {
 }
 
 #logSubmit:disabled {
-  opacity: 0.35;
+  opacity: 0.55;
   cursor: not-allowed;
   transform: none !important;
   box-shadow: none !important;
+}
+
+/* ── PLFR 1: Submit button loading state ── */
+.btn-loading {
+  pointer-events: none;
+  position: relative;
+  color: transparent !important;
+}
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  border: 3px solid rgba(124,45,61,0.2);
+  border-top-color: var(--maroon);
+  border-radius: 50%;
+  animation: btnSpin 0.6s linear infinite;
+}
+@keyframes btnSpin { to { transform: rotate(360deg); } }
+
+/* Submit progress hint */
+.submit-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 0.5rem;
+  transition: opacity 0.2s;
+}
+.submit-hint.hidden { opacity: 0; }
+
+/* ── PLFR 2: Notification drawer animation ── */
+.notif-drawer {
+  display: block !important;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.97);
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.notif-drawer.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.notif-bell:hover {
+  color: var(--maroon) !important;
+  transform: scale(1.15) !important;
+}
+
+.notif-bell svg {
+  transition: transform 0.2s;
+}
+.notif-bell:hover svg {
+  transform: rotate(-15deg);
+}
+
+/* Empty state in drawer */
+.notif-empty {
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+
+/* ── PLFR 3: Visual consistency ── */
+
+/* Consistent tab active indicator bar */
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  border-radius: 3px;
+  background: currentColor;
+  opacity: 0.4;
+}
+.tab-btn { position: relative; }
+
+/* Smooth content transitions */
+.panel-card, .chart-tile, .stat-card, .kpi-tile, .gauge-flip-tile {
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, opacity 0.3s ease;
+}
+
+/* Better form input focus glow */
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px var(--gold-glow), 0 2px 8px rgba(201,168,76,0.1) !important;
+}
+
+/* Table row hover is more visible */
+tbody tr { transition: background 0.15s; }
+tbody tr:hover { background: rgba(201,168,76,0.06) !important; }
+
+/* Consistent border radius on all interactive elements */
+.chip, .staff-btn, .size-btn, .carrier-btn {
+  border-radius: var(--r-sm) !important;
+}
+
+/* Better disabled state for all buttons */
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* sheen removed */

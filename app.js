@@ -377,6 +377,7 @@
     document.getElementById('logAptValue').textContent = res.apartment;
     document.getElementById('logAptDisplay').style.display = 'flex';
     document.getElementById('logSubmit').disabled = false;
+    document.getElementById('submitHint').classList.add('hidden');
   });
 
   document.getElementById('clearResident').addEventListener('click',()=>{
@@ -384,15 +385,24 @@
     document.getElementById('residentSearch').value='';
     document.getElementById('logAptDisplay').style.display='none';
     document.getElementById('logSubmit').disabled=true;
+    document.getElementById('submitHint').classList.remove('hidden');
   });
 
   // Submit
+  let isSubmitting = false;
   document.getElementById('logForm').addEventListener('submit',e=>{
     e.preventDefault();
+    if (isSubmitting) return; // double-submit guard
     try {
     const resId=document.getElementById('log-resident-id').value;
     const res=residents.find(r=>r.id===resId);
-    if(!res){toast('Select a resident','error');return;}
+    if(!res){toast('Select a resident','error');document.getElementById('logForm').classList.add('shake');setTimeout(()=>document.getElementById('logForm').classList.remove('shake'),400);return;}
+
+    // Loading state
+    isSubmitting = true;
+    const submitBtn = document.getElementById('logSubmit');
+    submitBtn.classList.add('btn-loading');
+    submitBtn.disabled = true;
 
     const customNote=document.getElementById('log-notes-custom').value.trim();
     const allNotes=[...selectedNotes];
@@ -431,7 +441,10 @@
     document.getElementById('log-notes-custom').value='';
     selectedNotes.clear();
     document.querySelectorAll('.chip.selected').forEach(c=>c.classList.remove('selected'));
-    } catch(err) { console.error('Log submit error:', err); toast('Error: '+err.message,'error'); }
+
+    // Clear loading state
+    setTimeout(() => { submitBtn.classList.remove('btn-loading'); isSubmitting = false; }, 500);
+    } catch(err) { console.error('Log submit error:', err); toast('Error: '+err.message,'error'); isSubmitting = false; document.getElementById('logSubmit').classList.remove('btn-loading'); }
   });
 
   // ── UNDO (Round 6) ──
