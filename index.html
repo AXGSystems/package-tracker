@@ -384,71 +384,35 @@
 
         <!-- KPI Tiles -->
         <div class="stats-kpi-row stats-kpi-6">
-          <div class="kpi-tile kpi-gold" data-kpi="total" role="button" tabindex="0" aria-label="Total Packages — click for details">
-            <span class="kpi-flip-hint">tap for detail</span>
-            <div class="kpi-tile-inner">
-              <div class="kpi-front">
-                <div class="kpi-value" id="kpiTotal">0</div>
-                <div class="kpi-label">Total Packages</div>
-                <div class="kpi-sub">All time</div>
-              </div>
-              <div class="kpi-back" id="kpiTotalBack"></div>
-            </div>
+          <div class="kpi-tile kpi-gold" onclick="showTileDetail('kpiTotal')">
+            <div class="kpi-value" id="kpiTotal">0</div>
+            <div class="kpi-label">Total Packages</div>
+            <div class="kpi-sub">All time</div>
           </div>
-          <div class="kpi-tile kpi-blue" data-kpi="today" role="button" tabindex="0" aria-label="Today — click for details">
-            <span class="kpi-flip-hint">tap for detail</span>
-            <div class="kpi-tile-inner">
-              <div class="kpi-front">
-                <div class="kpi-value" id="kpiToday2">0</div>
-                <div class="kpi-trend" id="kpiTodayTrend"></div>
-                <div class="kpi-label">Today</div>
-              </div>
-              <div class="kpi-back" id="kpiTodayBack"></div>
-            </div>
+          <div class="kpi-tile kpi-blue" onclick="showTileDetail('kpiToday')">
+            <div class="kpi-value" id="kpiToday2">0</div>
+            <div class="kpi-trend" id="kpiTodayTrend"></div>
+            <div class="kpi-label">Today</div>
           </div>
-          <div class="kpi-tile kpi-maroon" data-kpi="pending" role="button" tabindex="0" aria-label="At Front Desk — click for details">
-            <span class="kpi-flip-hint">tap for detail</span>
-            <div class="kpi-tile-inner">
-              <div class="kpi-front">
-                <div class="kpi-value" id="kpiPending2">0</div>
-                <div class="kpi-label">At Front Desk</div>
-                <div class="kpi-sub">Awaiting pickup</div>
-              </div>
-              <div class="kpi-back" id="kpiPendingBack"></div>
-            </div>
+          <div class="kpi-tile kpi-maroon" onclick="showTileDetail('kpiPending')">
+            <div class="kpi-value" id="kpiPending2">0</div>
+            <div class="kpi-label">At Front Desk</div>
+            <div class="kpi-sub">Awaiting pickup</div>
           </div>
-          <div class="kpi-tile kpi-green" data-kpi="rate" role="button" tabindex="0" aria-label="Same-Day Rate — click for details">
-            <span class="kpi-flip-hint">tap for detail</span>
-            <div class="kpi-tile-inner">
-              <div class="kpi-front">
-                <div class="kpi-value" id="kpiPickupRate">0%</div>
-                <div class="kpi-label">Same-Day Rate</div>
-                <div class="kpi-sub">Picked up same day</div>
-              </div>
-              <div class="kpi-back" id="kpiRateBack"></div>
-            </div>
+          <div class="kpi-tile kpi-green" onclick="showTileDetail('kpiRate')">
+            <div class="kpi-value" id="kpiPickupRate">0%</div>
+            <div class="kpi-label">Same-Day Rate</div>
+            <div class="kpi-sub">Picked up same day</div>
           </div>
-          <div class="kpi-tile kpi-purple" data-kpi="avg" role="button" tabindex="0" aria-label="Average Pickup — click for details">
-            <span class="kpi-flip-hint">tap for detail</span>
-            <div class="kpi-tile-inner">
-              <div class="kpi-front">
-                <div class="kpi-value" id="kpiAvg2">—</div>
-                <div class="kpi-label">Avg Pickup</div>
-                <div class="kpi-sub">Delivery to pickup</div>
-              </div>
-              <div class="kpi-back" id="kpiAvgBack"></div>
-            </div>
+          <div class="kpi-tile kpi-purple" onclick="showTileDetail('kpiAvg')">
+            <div class="kpi-value" id="kpiAvg2">—</div>
+            <div class="kpi-label">Avg Pickup</div>
+            <div class="kpi-sub">Delivery to pickup</div>
           </div>
-          <div class="kpi-tile kpi-orange" data-kpi="weekly" role="button" tabindex="0" aria-label="This Week — click for details">
-            <span class="kpi-flip-hint">tap for detail</span>
-            <div class="kpi-tile-inner">
-              <div class="kpi-front">
-                <div class="kpi-value" id="kpiWeekly">0</div>
-                <div class="kpi-trend" id="kpiWeeklyTrend"></div>
-                <div class="kpi-label">This Week</div>
-              </div>
-              <div class="kpi-back" id="kpiWeeklyBack"></div>
-            </div>
+          <div class="kpi-tile kpi-orange" onclick="showTileDetail('kpiWeekly')">
+            <div class="kpi-value" id="kpiWeekly">0</div>
+            <div class="kpi-trend" id="kpiWeeklyTrend"></div>
+            <div class="kpi-label">This Week</div>
           </div>
         </div>
 
