@@ -1366,13 +1366,12 @@
   let tileBacksData = {};
 
   window.showTileDetail = function(id) {
-    // Build data on demand
-    if (!tileBacksData[id]) {
-      try { buildTileBacksData(); } catch(e) { console.warn('buildTileBacksData:', e); }
-      try { buildGaugeData(); } catch(e) { console.warn('buildGaugeData:', e); }
-    }
+    // Always rebuild all data fresh
+    try { buildKpiData(); } catch(e) { console.warn('buildKpiData:', e); }
+    try { buildTileBacksData(); } catch(e) { console.warn('buildTileBacksData:', e); }
+    try { buildGaugeData(); } catch(e) { console.warn('buildGaugeData:', e); }
     var data = tileBacksData[id];
-    if (!data) { alert('No detail data for: ' + id); return; }
+    if (!data) { toast('Detail not available for: ' + id, 'warning'); return; }
     document.getElementById('tileDetailTitle').textContent = data.title;
     document.getElementById('tileDetailBody').innerHTML = data.html;
     document.getElementById('tileDetailModal').style.display = 'flex';
