@@ -592,6 +592,25 @@
     if(topEl) topEl.textContent=top?top[0]:'—';
     const lostEl=document.getElementById('statLost');
     if(lostEl) lostEl.textContent=packages.filter(p=>p.status==='lost').length;
+
+    // Also populate Stats page KPI tiles (so they're filled before Stats tab is clicked)
+    try {
+      const weekAgo=new Date(Date.now()-7*86400000);
+      const weekP=packages.filter(p=>new Date(p.checkinTime)>=weekAgo);
+      const sameDayPU=pu.filter(p=>{const ci=new Date(p.checkinTime);ci.setHours(0,0,0,0);const po=new Date(p.pickupTime);po.setHours(0,0,0,0);return ci.getTime()===po.getTime();});
+      const rate=pu.length?Math.round((sameDayPU.length/pu.length)*100):0;
+
+      const e=id=>{const el=document.getElementById(id);return el;};
+      if(e('kpiTotal')) e('kpiTotal').textContent=packages.length;
+      if(e('kpiToday2')) e('kpiToday2').textContent=tp.length;
+      if(e('kpiPending2')) e('kpiPending2').textContent=pend.length;
+      if(e('kpiPickupRate')) e('kpiPickupRate').textContent=rate+'%';
+      if(e('kpiAvg2')) e('kpiAvg2').textContent=avg;
+      if(e('kpiWeekly')) e('kpiWeekly').textContent=weekP.length;
+    } catch(kpiErr) { console.warn('KPI populate:', kpiErr); }
+
+    // Populate KPI flip backs eagerly
+    try { populateKpiBackCards(); } catch(e) {}
   }
 
   // ══════════════════════════════════════════════
