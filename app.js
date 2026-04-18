@@ -1265,41 +1265,40 @@
       const sh=hBetween(sorted[sorted.length-1].checkinTime,sorted[sorted.length-1].pickupTime); slow=sh<24?sh.toFixed(1)+'h':(sh/24).toFixed(1)+'d';
     }
 
-    tileBacksData.kpiTotal = {
-      title: 'Total Packages — Breakdown',
+    try { tileBacksData.kpiTotal = { title: 'Total Packages — Breakdown',
       html: sec('All-Time Stats', m('Total logged', packages.length) + m('Picked up', pu.length) + m('Pending now', pending.length) + m('Lost', lost.length)) +
         sec('Time Ranges', m('Today', todayP.length) + m('This week', weekP.length) + m('This month', monthP.length)) +
         `<div class="chart-back-insight">Track total volume month-over-month to justify staffing and storage investment.</div>`
-    };
-    tileBacksData.kpiToday = {
-      title: 'Today — Detail',
+    }; } catch(e) { console.warn('kpiTotal:', e); }
+
+    try { tileBacksData.kpiToday = { title: 'Today — Detail',
       html: sec('Today\'s Activity', m('Logged today', todayP.length) + m('Picked up today', todayP.filter(p=>p.status==='picked_up').length) + m('Still pending', todayP.filter(p=>p.status==='pending').length)) +
         sec('Comparison', m('Yesterday', packages.filter(p=>{const t=new Date(p.checkinTime);const y=new Date(today.getTime()-86400000);return t>=y&&t<today;}).length) + m('7-day avg', (weekP.length/7).toFixed(1)+'/day')) +
         `<div class="chart-back-insight">If today's count is significantly above average, expect a busy afternoon for pickups.</div>`
-    };
-    tileBacksData.kpiPending = {
-      title: 'At Front Desk — Pending Packages',
+    }; } catch(e) { console.warn('kpiToday:', e); }
+
+    try { tileBacksData.kpiPending = { title: 'At Front Desk — Pending Packages',
       html: sec('Status', m('Total pending', pending.length) + m('Overdue (48h+)', overdue.length) + m('At risk (24-48h)', pending.filter(p=>{const h=hBetween(p.checkinTime,now.toISOString());return h>=24&&h<48;}).length) + m('Lost/missing', lost.length)) +
-        (pending.length ? sec('Oldest Pending', pending.sort((a,b)=>new Date(a.checkinTime)-new Date(b.checkinTime)).slice(0,3).map(p=>m(p.residentName+' (Apt '+p.apartment+')', Math.round(hBetween(p.checkinTime,now.toISOString()))+'h ago')).join('')) : '') +
+        (pending.length ? sec('Oldest Pending', [...pending].sort((a,b)=>new Date(a.checkinTime)-new Date(b.checkinTime)).slice(0,3).map(p=>m(p.residentName+' (Apt '+p.apartment+')', Math.round(hBetween(p.checkinTime,now.toISOString()))+'h ago')).join('')) : '') +
         `<div class="chart-back-insight">Follow up on packages pending 24+ hours. Call residents directly for 48h+ overdue.</div>`
-    };
-    tileBacksData.kpiRate = {
-      title: 'Same-Day Pickup Rate',
+    }; } catch(e) { console.warn('kpiPending:', e); }
+
+    try { tileBacksData.kpiRate = { title: 'Same-Day Pickup Rate',
       html: sec('Breakdown', m('Same-day pickups', sameDayPU.length) + m('Next-day', pu.filter(p=>{const h=hBetween(p.checkinTime,p.pickupTime);return h>=24&&h<48;}).length) + m('2+ days', pu.filter(p=>hBetween(p.checkinTime,p.pickupTime)>=48).length) + m('Total picked up', pu.length)) +
         sec('Rate', m('Same-day rate', pu.length?Math.round(sameDayPU.length/pu.length*100)+'%':'—')) +
         `<div class="chart-back-insight">Above 70% same-day is excellent. Send a 5 PM reminder to boost collections.</div>`
-    };
-    tileBacksData.kpiAvg = {
-      title: 'Average Pickup Time',
+    }; } catch(e) { console.warn('kpiRate:', e); }
+
+    try { tileBacksData.kpiAvg = { title: 'Average Pickup Time',
       html: sec('Speed Analysis', m('Average', avgH<1?Math.round(avgH*60)+' min':avgH<24?avgH.toFixed(1)+' hours':(avgH/24).toFixed(1)+' days') + m('Fastest', fast) + m('Slowest', slow) + m('Total pickups', pu.length)) +
         `<div class="chart-back-insight">Average under 6 hours is great. Over 24 hours means residents aren't checking — consider push notifications.</div>`
-    };
-    tileBacksData.kpiWeekly = {
-      title: 'This Week — 7-Day View',
+    }; } catch(e) { console.warn('kpiAvg:', e); }
+
+    try { tileBacksData.kpiWeekly = { title: 'This Week — 7-Day View',
       html: sec('Volume', m('This week', weekP.length) + m('Last week', prevWeek.length) + m('Trend', weekP.length>prevWeek.length?'+'+(weekP.length-prevWeek.length)+' more':weekP.length<prevWeek.length?(weekP.length-prevWeek.length)+' fewer':'Same')) +
         sec('Averages', m('Daily avg this week', (weekP.length/7).toFixed(1)) + m('Daily avg last week', (prevWeek.length/7).toFixed(1))) +
         `<div class="chart-back-insight">Rising week-over-week volume? Present the data to management for additional resources.</div>`
-    };
+    }; } catch(e) { console.warn('kpiWeekly:', e); }
   }
 
   // Keep for backward compat — now just calls buildKpiData
