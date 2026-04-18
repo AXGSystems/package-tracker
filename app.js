@@ -1366,11 +1366,13 @@
 
   window.showTileDetail = function(id) {
     // Always rebuild all data fresh
-    try { buildKpiData(); } catch(e) { console.warn('buildKpiData:', e); }
+    try { buildKpiData(); } catch(e) { console.warn('buildKpiData:', e); toast('KPI build error: '+e.message,'error'); }
     try { buildTileBacksData(); } catch(e) { console.warn('buildTileBacksData:', e); }
     try { buildGaugeData(); } catch(e) { console.warn('buildGaugeData:', e); }
+    // Debug: show what keys we have
+    var keys = Object.keys(tileBacksData);
     var data = tileBacksData[id];
-    if (!data) { toast('Detail not available for: ' + id, 'warning'); return; }
+    if (!data) { toast('No data for "' + id + '". Available: ' + keys.join(', '), 'error'); return; }
     document.getElementById('tileDetailTitle').textContent = data.title;
     document.getElementById('tileDetailBody').innerHTML = data.html;
     document.getElementById('tileDetailModal').style.display = 'flex';
