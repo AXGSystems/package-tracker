@@ -147,6 +147,10 @@
     document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
     b.classList.add('active');document.getElementById('tab-'+b.dataset.tab).classList.add('active');
+    // Re-render data views on tab switch
+    if(b.dataset.tab==='dashboard') renderDashboard();
+    if(b.dataset.tab==='stats') setTimeout(renderStats, 200);
+    if(b.dataset.tab==='residents') renderResidents();
   });});
 
   // ══════════════════════════════════════════════
@@ -590,7 +594,10 @@
     selectedIds.clear(); cx.clearRect(0,0,cv.width,cv.height);
     document.getElementById('typedSignature').value='';
     document.getElementById('signatureSection').style.display='none';
-    renderPending(pkResId);
+    // Full reset — clear resident search, show empty state
+    document.getElementById('pk-resident-id').value='';
+    document.getElementById('pkResidentSearch').value='';
+    document.getElementById('pendingPackagesList').innerHTML='<p class="empty-state">Select a resident to see pending packages.</p>';
   });
 
   // ══════════════════════════════════════════════
