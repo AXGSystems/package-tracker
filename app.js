@@ -390,63 +390,85 @@
 
   // Submit
   let isSubmitting = false;
-  document.getElementById('logForm').addEventListener('submit',e=>{
-    e.preventDefault();
-    if (isSubmitting) return; // double-submit guard
-    try {
-    const resId=document.getElementById('log-resident-id').value;
-    const res=residents.find(r=>r.id===resId);
-    if(!res){toast('Select a resident','error');document.getElementById('logForm').classList.add('shake');setTimeout(()=>document.getElementById('logForm').classList.remove('shake'),400);return;}
 
-    // Loading state
-    isSubmitting = true;
-    const submitBtn = document.getElementById('logSubmit');
-    submitBtn.classList.add('btn-loading');
-    submitBtn.disabled = true;
-
-    const customNote=document.getElementById('log-notes-custom').value.trim();
-    const allNotes=[...selectedNotes];
-    if(customNote) allNotes.push(customNote);
-    const tracking=document.getElementById('log-tracking').value.trim();
-
-    const pkg={
-      id:nextId(), residentId:res.id, residentName:res.name, apartment:res.apartment,
-      carrier:logCarrier, size:logSize, tracking:tracking||null,
-      notes:allNotes.length?allNotes.join(', '):null,
-      photo:capturedPhoto||null,
-      loggedBy:logStaff, checkinTime:new Date().toISOString(), status:'pending',
-      pickupTime:null, signature:null, typedSignature:null, signatureMethod:null
-    };
-
-    packages.push(pkg); save(KEYS.packages,packages);
-    updatePending(); updateAnalytics(); renderDashboard();
-    sync('logPackage',{package:pkg});
-    if(res.email) sync('sendNotification',{email:res.email,residentName:res.name,apartment:res.apartment,carrier:pkg.carrier,size:pkg.size,packageId:pkg.id});
-
-    showSuccess('Package Logged!',`#${pkg.id} — ${res.name} (Apt ${res.apartment}) — ${logCarrier} ${logSize}\nLogged: ${fmtFull(pkg.checkinTime)}`);
-    try { launchConfetti(); setTimeout(stopConfetti, 3000); } catch(e) { console.warn('Confetti error:', e); }
-    if(res.email) toast(`Notification sent to ${res.email}`,'info');
-
-    // Undo support
-    lastLoggedPkgId = pkg.id;
-    showUndo(`Package #${pkg.id} logged for ${res.name}`);
-    addNotification(`Package #${pkg.id} logged for ${res.name} (${logCarrier})`);
-    updateTrends();
-
-    // Reset form
-    document.getElementById('log-resident-id').value='';
-    document.getElementById('residentSearch').value='';
-    document.getElementById('logAptDisplay').style.display='none';
-    document.getElementById('logSubmit').disabled=true;
-    document.getElementById('log-tracking').value='';
-    document.getElementById('log-notes-custom').value='';
+  function resetLogForm() {
+    document.getElementById('log-resident-id').value = '';
+    document.getElementById('residentSearch').value = '';
+    document.getElementById('logAptDisplay').style.display = 'none';
+    document.getElementById('log-tracking').value = '';
+    document.getElementById('log-notes-custom').value = '';
     selectedNotes.clear();
-    document.querySelectorAll('.chip.selected').forEach(c=>c.classList.remove('selected'));
-    capturedPhoto=null; document.getElementById('photoPreview').style.display='none'; document.getElementById('capturePhotoBtn').style.display='';
+    document.querySelectorAll('.chip.selected').forEach(function(c){c.classList.remove('selected');});
+    capturedPhoto = null;
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('capturePhotoBtn').style.display = '';
+    // Button back to disabled + hint visible
+    var btn = document.getElementById('logSubmit');
+    btn.disabled = true;
+    btn.classList.remove('btn-loading');
+    document.getElementById('submitHint').classList.remove('hidden');
+    isSubmitting = false;
+  }
 
-    // Clear loading state
-    setTimeout(() => { submitBtn.classList.remove('btn-loading'); isSubmitting = false; }, 500);
-    } catch(err) { console.error('Log submit error:', err); toast('Error: '+err.message,'error'); isSubmitting = false; document.getElementById('logSubmit').classList.remove('btn-loading'); }
+  document.getElementById('logForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    var resId = document.getElementById('log-resident-id').value;
+    var res = residents.find(function(r){return r.id===resId;});
+    if (!res) {
+      toast('Select a resident first', 'error');
+      document.getElementById('logForm').classList.add('shake');
+      setTimeout(function(){document.getElementById('logForm').classList.remove('shake');}, 400);
+      return;
+    }
+
+    // Lock button
+    isSubmitting = true;
+    var btn = document.getElementById('logSubmit');
+    btn.classList.add('btn-loading');
+    btn.disabled = true;
+
+    try {
+      var customNote = document.getElementById('log-notes-custom').value.trim();
+      var allNotes = Array.from(selectedNotes);
+      if (customNote) allNotes.push(customNote);
+      var tracking = document.getElementById('log-tracking').value.trim();
+
+      var pkg = {
+        id: nextId(), residentId: res.id, residentName: res.name, apartment: res.apartment,
+        carrier: logCarrier, size: logSize, tracking: tracking || null,
+        notes: allNotes.length ? allNotes.join(', ') : null,
+        photo: capturedPhoto || null,
+        loggedBy: logStaff, checkinTime: new Date().toISOString(), status: 'pending',
+        pickupTime: null, signature: null, typedSignature: null, signatureMethod: null
+      };
+
+      packages.push(pkg);
+      save(KEYS.packages, packages);
+      updatePending();
+      updateAnalytics();
+      renderDashboard();
+      sync('logPackage', {package: pkg});
+      if (res.email) sync('sendNotification', {email:res.email, residentName:res.name, apartment:res.apartment, carrier:pkg.carrier, size:pkg.size, packageId:pkg.id});
+
+      showSuccess('Package Logged!', '#' + pkg.id + ' — ' + res.name + ' (Apt ' + res.apartment + ') — ' + logCarrier + ' ' + logSize + '\nLogged: ' + fmtFull(pkg.checkinTime));
+      try { launchConfetti(); setTimeout(stopConfetti, 3000); } catch(ce) {}
+      if (res.email) toast('Notification sent to ' + res.email, 'info');
+
+      lastLoggedPkgId = pkg.id;
+      showUndo('Package #' + pkg.id + ' logged for ' + res.name);
+      addNotification('Package #' + pkg.id + ' logged for ' + res.name + ' (' + logCarrier + ')');
+      updateTrends();
+
+      // Reset after short delay so user sees the loading state
+      setTimeout(resetLogForm, 400);
+
+    } catch(err) {
+      console.error('Log submit error:', err);
+      toast('Error: ' + err.message, 'error');
+      resetLogForm();
+    }
   });
 
   // ── UNDO (Round 6) ──
