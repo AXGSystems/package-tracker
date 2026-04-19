@@ -1365,16 +1365,107 @@
   let tileBacksData = {};
 
   window.showTileDetail = function(id) {
-    // Always rebuild all data fresh
-    try { buildKpiData(); } catch(e) { console.warn('buildKpiData:', e); toast('KPI build error: '+e.message,'error'); }
-    try { buildTileBacksData(); } catch(e) { console.warn('buildTileBacksData:', e); }
-    try { buildGaugeData(); } catch(e) { console.warn('buildGaugeData:', e); }
-    // Debug: show what keys we have
-    var keys = Object.keys(tileBacksData);
-    var data = tileBacksData[id];
-    if (!data) { toast('No data for "' + id + '". Available: ' + keys.join(', '), 'error'); return; }
-    document.getElementById('tileDetailTitle').textContent = data.title;
-    document.getElementById('tileDetailBody').innerHTML = data.html;
+    // Build content directly — no external functions, no failure chain
+    var title = '', body = '';
+    try {
+      var now = new Date();
+      var today = new Date(); today.setHours(0,0,0,0);
+      var weekAgo = new Date(now.getTime() - 7*86400000);
+      var monthAgo = new Date(now.getTime() - 30*86400000);
+      var prevWeekStart = new Date(now.getTime() - 14*86400000);
+      var all = packages;
+      var todayP = all.filter(function(p){return new Date(p.checkinTime)>=today;});
+      var weekP = all.filter(function(p){return new Date(p.checkinTime)>=weekAgo;});
+      var monthP = all.filter(function(p){return new Date(p.checkinTime)>=monthAgo;});
+      var prevWeekP = all.filter(function(p){var t=new Date(p.checkinTime);return t>=prevWeekStart&&t<weekAgo;});
+      var pend = all.filter(function(p){return p.status==='pending';});
+      var pu = all.filter(function(p){return p.status==='picked_up'&&p.pickupTime;});
+      var lost = all.filter(function(p){return p.status==='lost';});
+      var overdue = pend.filter(function(p){return Math.abs(now-new Date(p.checkinTime))/3600000>=48;});
+      var sdpu = pu.filter(function(p){var a=new Date(p.checkinTime);a.setHours(0,0,0,0);var b=new Date(p.pickupTime);b.setHours(0,0,0,0);return a.getTime()===b.getTime();});
+      var avgH = 0;
+      if(pu.length){var sum=0;for(var i=0;i<pu.length;i++){sum+=Math.abs(new Date(pu[i].pickupTime)-new Date(pu[i].checkinTime))/3600000;}avgH=sum/pu.length;}
+      var avgStr = avgH<1?Math.round(avgH*60)+'m':avgH<24?avgH.toFixed(1)+'h':(avgH/24).toFixed(1)+'d';
+      var rate = pu.length?Math.round(sdpu.length/pu.length*100):0;
+
+      var M = function(l,v){return '<div class="chart-back-metric"><span>'+l+'</span><strong>'+v+'</strong></div>';};
+      var S = function(t,c){return '<div class="chart-back-section"><div class="chart-back-section-title">'+t+'</div>'+c+'</div>';};
+      var I = function(t){return '<div class="chart-back-insight">'+t+'</div>';};
+
+      // Carrier counts
+      var cc = {};
+      for(var i=0;i<all.length;i++){cc[all[i].carrier]=(cc[all[i].carrier]||0)+1;}
+      var carriers = Object.keys(cc).sort(function(a,b){return cc[b]-cc[a];});
+
+      // Staff counts
+      var sc = {};
+      for(var i=0;i<all.length;i++){sc[all[i].loggedBy]=(sc[all[i].loggedBy]||0)+1;}
+
+      // Size counts
+      var szc = {};
+      for(var i=0;i<all.length;i++){szc[all[i].size]=(szc[all[i].size]||0)+1;}
+
+      // Resident counts
+      var rc = {};
+      for(var i=0;i<all.length;i++){rc[all[i].residentName]=(rc[all[i].residentName]||0)+1;}
+
+      switch(id) {
+        case 'kpiTotal':
+          title='Total Packages — Breakdown';
+          body=S('All-Time',M('Total',all.length)+M('Picked up',pu.length)+M('Pending',pend.length)+M('Lost',lost.length))+S('Time Ranges',M('Today',todayP.length)+M('This week',weekP.length)+M('This month',monthP.length))+I('Track volume month-over-month to justify staffing.');
+          break;
+        case 'kpiToday':
+          title='Today — Detail';
+          body=S('Activity',M('Logged today',todayP.length)+M('Picked up',todayP.filter(function(p){return p.status==='picked_up';}).length)+M('Still pending',todayP.filter(function(p){return p.status==='pending';}).length))+S('Comparison',M('7-day avg',(weekP.length/7).toFixed(1)+'/day'))+I('Above average? Expect a busy afternoon.');
+          break;
+        case 'kpiPending':
+          title='At Front Desk — Pending';
+          body=S('Status',M('Pending',pend.length)+M('Overdue 48h+',overdue.length)+M('Lost',lost.length))+I('Follow up on 24h+ packages. Call directly for 48h+.');
+          break;
+        case 'kpiRate':
+          title='Same-Day Pickup Rate';
+          body=S('Breakdown',M('Same-day pickups',sdpu.length)+M('Total picked up',pu.length)+M('Rate',rate+'%'))+I('Above 70% is excellent. Send 5 PM reminders to boost.');
+          break;
+        case 'kpiAvg':
+          title='Average Pickup Time';
+          body=S('Speed',M('Average',avgStr)+M('Total pickups',pu.length))+I('Under 6 hours is great. Over 24h = residents not checking.');
+          break;
+        case 'kpiWeekly':
+          title='This Week — 7 Days';
+          var diff=weekP.length-prevWeekP.length;
+          body=S('Volume',M('This week',weekP.length)+M('Last week',prevWeekP.length)+M('Trend',diff>0?'+'+diff+' more':diff<0?diff+' fewer':'Same'))+I('Rising volume? Present data to management.');
+          break;
+        // Gauge tiles
+        case 'gaugePickup':
+          title='Same-Day Pickup — Deep Dive';
+          body=S('Breakdown',M('Same-day',sdpu.length)+M('Total picked up',pu.length)+M('Rate',rate+'%'))+S('Speed',M('Average pickup',avgStr))+I('Send a 5 PM reminder to boost same-day rate.');
+          break;
+        case 'gaugeCapacity':
+          title='Daily Volume';
+          body=S('Comparison',M('Today',todayP.length)+M('7-day avg',(weekP.length/7).toFixed(1)+'/day')+M('30-day avg',(monthP.length/30).toFixed(1)+'/day'))+I('If today exceeds average, ensure desk coverage.');
+          break;
+        case 'gaugeFeedback':
+          title='Resident Satisfaction';
+          var fbAvg=feedback.length?(feedback.reduce(function(s,f){return s+f.rating;},0)/feedback.length).toFixed(1):'N/A';
+          body=S('Ratings',M('Average',fbAvg+'/5')+M('Total reviews',feedback.length))+[5,4,3,2,1].map(function(r){return M(r+' stars',feedback.filter(function(f){return f.rating===r;}).length);}).join('')+I('Share 5-star shoutouts with the team.');
+          break;
+        case 'gaugeOverdue':
+          title='Overdue Alert';
+          body=S('Overdue 48h+',overdue.length?overdue.slice(0,5).map(function(p){return M(p.residentName+' (Apt '+p.apartment+')',Math.round(Math.abs(now-new Date(p.checkinTime))/3600000)+'h');}).join(''):M('Status','All clear!'))+S('Risk',M('At risk 24-48h',pend.filter(function(p){var h=Math.abs(now-new Date(p.checkinTime))/3600000;return h>=24&&h<48;}).length))+I('Call overdue residents directly.');
+          break;
+        default:
+          // Try the pre-built data for chart tiles
+          try { buildTileBacksData(); } catch(e2){}
+          var d = tileBacksData[id];
+          if(d){title=d.title;body=d.html;}
+          else{title='Detail';body='<p>No detailed data available for this tile.</p>';}
+      }
+    } catch(err) {
+      title = 'Error';
+      body = '<p>Could not load detail: ' + String(err.message||err) + '</p>';
+    }
+    document.getElementById('tileDetailTitle').textContent = title;
+    document.getElementById('tileDetailBody').innerHTML = body;
     document.getElementById('tileDetailModal').style.display = 'flex';
   };
 
