@@ -1563,6 +1563,162 @@ tbody tr:hover { background: rgba(201,168,76,0.06) !important; }
 .backup-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
 
 /* ══════════════════════════════════════════════
+   V2 FEATURES — Scanner, Camera, Kiosk, SMS
+   ══════════════════════════════════════════════ */
+
+/* ── Barcode Scanner ── */
+.tracking-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.scan-btn {
+  min-width: var(--touch-min);
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanner-view {
+  position: relative;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  margin-top: 0.75rem;
+  background: #000;
+}
+
+.scanner-view video {
+  width: 100%;
+  display: block;
+  border-radius: var(--r-sm);
+}
+
+.scanner-overlay {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--gold);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
+  pointer-events: none;
+}
+
+.scanner-overlay::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 2px;
+  background: var(--danger);
+  box-shadow: 0 0 12px var(--danger);
+  animation: scanLine 2s ease-in-out infinite;
+}
+
+@keyframes scanLine {
+  0%, 100% { transform: translateY(-40px); }
+  50% { transform: translateY(40px); }
+}
+
+.scanner-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 5;
+  background: rgba(0,0,0,0.6) !important;
+  color: #fff !important;
+  border: none !important;
+  min-height: 36px;
+  font-size: 0.8rem;
+}
+
+/* ── Photo Capture ── */
+.photo-row {
+  margin-bottom: 1rem;
+}
+
+.photo-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.photo-preview {
+  position: relative;
+  margin-top: 0.5rem;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  border: 2px solid var(--gold-border);
+}
+
+.photo-preview img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-remove {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-snap {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  min-width: 140px;
+}
+
+/* ── Kiosk Mode ── */
+.kiosk-panel {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.kiosk-header {
+  margin-bottom: 1.5rem;
+}
+
+.kiosk-header h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.kiosk-search {
+  font-size: 1.2rem !important;
+  min-height: 60px !important;
+  text-align: center;
+}
+
+.kiosk-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--glass-border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Kiosk tab gets special color */
+.tab-btn[data-tab="kiosk"] { background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.15); color: var(--gold-dark); }
+.tab-btn.active[data-tab="kiosk"] { background: rgba(201,168,76,0.18); border-color: rgba(201,168,76,0.35); box-shadow: 0 4px 20px rgba(201,168,76,0.15), inset 0 1px 0 rgba(255,255,255,0.5); }
+
+/* ══════════════════════════════════════════════
    SUPER GLASSMORPHIC PANEL OVERHAUL
    ══════════════════════════════════════════════ */
 

@@ -413,6 +413,7 @@
       id:nextId(), residentId:res.id, residentName:res.name, apartment:res.apartment,
       carrier:logCarrier, size:logSize, tracking:tracking||null,
       notes:allNotes.length?allNotes.join(', '):null,
+      photo:capturedPhoto||null,
       loggedBy:logStaff, checkinTime:new Date().toISOString(), status:'pending',
       pickupTime:null, signature:null, typedSignature:null, signatureMethod:null
     };
@@ -441,6 +442,7 @@
     document.getElementById('log-notes-custom').value='';
     selectedNotes.clear();
     document.querySelectorAll('.chip.selected').forEach(c=>c.classList.remove('selected'));
+    capturedPhoto=null; document.getElementById('photoPreview').style.display='none'; document.getElementById('capturePhotoBtn').style.display='';
 
     // Clear loading state
     setTimeout(() => { submitBtn.classList.remove('btn-loading'); isSubmitting = false; }, 500);
@@ -1763,6 +1765,206 @@
   // Add to reset flow — offer download before erasing
   const origResetHandler = document.getElementById('resetDemoBtn');
   // Already handled above — enhanced: we notify on key actions
+
+  // ══════════════════════════════════════════════
+  //  V2: BARCODE SCANNER
+  // ══════════════════════════════════════════════
+
+  var scannerStream = null;
+
+  document.getElementById('scanBarcodeBtn').addEventListener('click', function() {
+    var view = document.getElementById('scannerView');
+    var video = document.getElementById('scannerVideo');
+    if (view.style.display !== 'none') { stopScanner(); return; }
+
+    view.style.display = 'block';
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(function(stream) {
+        scannerStream = stream;
+        video.srcObject = stream;
+        // Try BarcodeDetector API (Chrome/Edge)
+        if ('BarcodeDetector' in window) {
+          var detector = new BarcodeDetector({ formats: ['code_128','code_39','ean_13','ean_8','qr_code','upc_a','upc_e'] });
+          var scanInterval = setInterval(function() {
+            if (!scannerStream) { clearInterval(scanInterval); return; }
+            detector.detect(video).then(function(barcodes) {
+              if (barcodes.length > 0) {
+                document.getElementById('log-tracking').value = barcodes[0].rawValue;
+                toast('Scanned: ' + barcodes[0].rawValue, 'success');
+                stopScanner();
+                clearInterval(scanInterval);
+              }
+            }).catch(function(){});
+          }, 500);
+        } else {
+          toast('Camera active — BarcodeDetector not supported in this browser. Type tracking # manually.', 'info');
+        }
+      })
+      .catch(function(err) {
+        toast('Camera access denied: ' + err.message, 'error');
+        view.style.display = 'none';
+      });
+  });
+
+  document.getElementById('scannerClose').addEventListener('click', stopScanner);
+
+  function stopScanner() {
+    if (scannerStream) { scannerStream.getTracks().forEach(function(t){t.stop();}); scannerStream = null; }
+    document.getElementById('scannerView').style.display = 'none';
+  }
+
+  // ══════════════════════════════════════════════
+  //  V2: PHOTO CAPTURE
+  // ══════════════════════════════════════════════
+
+  var cameraStream = null;
+  var capturedPhoto = null;
+
+  document.getElementById('capturePhotoBtn').addEventListener('click', function() {
+    var view = document.getElementById('cameraView');
+    var video = document.getElementById('cameraVideo');
+    view.style.display = 'block';
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(function(stream) {
+        cameraStream = stream;
+        video.srcObject = stream;
+      })
+      .catch(function(err) {
+        toast('Camera access denied: ' + err.message, 'error');
+        view.style.display = 'none';
+      });
+  });
+
+  document.getElementById('cameraSnap').addEventListener('click', function() {
+    var video = document.getElementById('cameraVideo');
+    var canvas = document.getElementById('photoCanvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    capturedPhoto = canvas.toDataURL('image/jpeg', 0.7);
+
+    document.getElementById('photoImg').src = capturedPhoto;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('capturePhotoBtn').style.display = 'none';
+    stopCamera();
+    toast('Photo captured!', 'success');
+  });
+
+  document.getElementById('cameraClose').addEventListener('click', stopCamera);
+
+  document.getElementById('photoRemove').addEventListener('click', function() {
+    capturedPhoto = null;
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('capturePhotoBtn').style.display = '';
+  });
+
+  function stopCamera() {
+    if (cameraStream) { cameraStream.getTracks().forEach(function(t){t.stop();}); cameraStream = null; }
+    document.getElementById('cameraView').style.display = 'none';
+  }
+
+  // ══════════════════════════════════════════════
+  //  V2: KIOSK MODE (self-service pickup)
+  // ══════════════════════════════════════════════
+
+  var kioskSelectedIds = new Set();
+
+  setupResidentSearch('kioskSearch', 'kioskDropdown', 'kiosk-resident-id', function(res) {
+    kioskSelectedIds.clear();
+    renderKioskPackages(res.id);
+  });
+
+  function renderKioskPackages(resId) {
+    var list = document.getElementById('kioskPackageList');
+    var sig = document.getElementById('kioskSignSection');
+    if (!resId) { list.innerHTML = '<p class="empty-state">Your packages will appear here.</p>'; sig.style.display='none'; return; }
+    var pend = packages.filter(function(p){return p.residentId===resId && p.status==='pending';});
+    if (!pend.length) { list.innerHTML = '<p class="empty-state">No pending packages. You\'re all set!</p>'; sig.style.display='none'; return; }
+
+    list.innerHTML = '<p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:0.75rem;"><strong>' + pend.length + '</strong> package' + (pend.length>1?'s':'') + ' waiting for you:</p>' +
+      pend.map(function(p) {
+        return '<div class="pkg-item" data-kiosk-pkg="'+p.id+'" style="cursor:pointer;">' +
+          '<div class="pkg-item-info"><span><strong>#'+p.id+'</strong></span><span>'+esc(p.carrier)+'</span><span>'+esc(p.size)+'</span></div>' +
+          '<input type="checkbox" checked data-kiosk-cb="'+p.id+'">' +
+        '</div>';
+      }).join('');
+
+    // All pre-selected
+    pend.forEach(function(p) { kioskSelectedIds.add(p.id); });
+
+    list.querySelectorAll('.pkg-item[data-kiosk-pkg]').forEach(function(item) {
+      item.addEventListener('click', function(ev) {
+        var cb = item.querySelector('input[type="checkbox"]');
+        if (ev.target !== cb) cb.checked = !cb.checked;
+        var pid = Number(item.dataset.kioskPkg);
+        if (cb.checked) { kioskSelectedIds.add(pid); item.classList.add('selected'); }
+        else { kioskSelectedIds.delete(pid); item.classList.remove('selected'); }
+        sig.style.display = kioskSelectedIds.size > 0 ? 'block' : 'none';
+      });
+    });
+
+    sig.style.display = 'block';
+  }
+
+  // Kiosk signature toggle
+  var kioskSigMode = 'draw';
+  document.getElementById('kioskSigDraw').addEventListener('click', function() {
+    kioskSigMode = 'draw';
+    this.classList.add('active'); document.getElementById('kioskSigType').classList.remove('active');
+    document.getElementById('kioskDrawMode').style.display = 'block'; document.getElementById('kioskTypeMode').style.display = 'none';
+  });
+  document.getElementById('kioskSigType').addEventListener('click', function() {
+    kioskSigMode = 'type';
+    this.classList.add('active'); document.getElementById('kioskSigDraw').classList.remove('active');
+    document.getElementById('kioskTypeMode').style.display = 'block'; document.getElementById('kioskDrawMode').style.display = 'none';
+  });
+
+  // Kiosk canvas
+  var kCv = document.getElementById('kioskCanvas');
+  var kCx = kCv.getContext('2d');
+  var kDrawing = false;
+  function resizeKioskCanvas() { var r=kCv.parentElement.getBoundingClientRect(); kCv.width=r.width; kCv.height=200; kCx.strokeStyle='#1a1a2e'; kCx.lineWidth=2.5; kCx.lineCap='round'; kCx.lineJoin='round'; }
+  function kPos(e) { var r=kCv.getBoundingClientRect(); var t=e.touches?e.touches[0]:e; return {x:t.clientX-r.left,y:t.clientY-r.top}; }
+  kCv.addEventListener('mousedown',function(e){kDrawing=true;kCx.beginPath();var p=kPos(e);kCx.moveTo(p.x,p.y);});
+  kCv.addEventListener('mousemove',function(e){if(!kDrawing)return;var p=kPos(e);kCx.lineTo(p.x,p.y);kCx.stroke();});
+  kCv.addEventListener('mouseup',function(){kDrawing=false;}); kCv.addEventListener('mouseleave',function(){kDrawing=false;});
+  kCv.addEventListener('touchstart',function(e){e.preventDefault();kDrawing=true;kCx.beginPath();var p=kPos(e);kCx.moveTo(p.x,p.y);},{passive:false});
+  kCv.addEventListener('touchmove',function(e){e.preventDefault();if(!kDrawing)return;var p=kPos(e);kCx.lineTo(p.x,p.y);kCx.stroke();},{passive:false});
+  kCv.addEventListener('touchend',function(){kDrawing=false;});
+  document.getElementById('kioskClearSig').addEventListener('click',function(){kCx.clearRect(0,0,kCv.width,kCv.height);});
+  setTimeout(resizeKioskCanvas, 200);
+  window.addEventListener('resize', resizeKioskCanvas);
+
+  // Kiosk confirm pickup
+  document.getElementById('kioskConfirmBtn').addEventListener('click', function() {
+    if (!kioskSelectedIds.size) { toast('Select at least one package', 'error'); return; }
+    var sigData = null, typedName = null;
+    if (kioskSigMode === 'draw') {
+      var blank = document.createElement('canvas'); blank.width=kCv.width; blank.height=kCv.height;
+      if (kCv.toDataURL() === blank.toDataURL()) { toast('Please sign above', 'error'); return; }
+      sigData = kCv.toDataURL('image/png');
+    } else {
+      typedName = document.getElementById('kioskTypedName').value.trim();
+      if (!typedName) { toast('Type your name to confirm', 'error'); return; }
+    }
+    var now = new Date().toISOString();
+    kioskSelectedIds.forEach(function(id) {
+      var pkg = packages.find(function(p){return p.id===id;});
+      if (pkg) { pkg.status='picked_up'; pkg.pickupTime=now; pkg.signature=sigData; pkg.typedSignature=typedName; pkg.signatureMethod=kioskSigMode; }
+    });
+    save(KEYS.packages, packages); updatePending(); updateAnalytics();
+    var resId = document.getElementById('kiosk-resident-id').value;
+    var res = residents.find(function(r){return r.id===resId;});
+    showCelebration(res ? res.name : (typedName || 'Friend'), now);
+    addNotification((res?res.name:'Resident') + ' self-service pickup: ' + kioskSelectedIds.size + ' pkg(s)');
+    kioskSelectedIds.clear();
+    kCx.clearRect(0,0,kCv.width,kCv.height);
+    document.getElementById('kioskTypedName').value='';
+    document.getElementById('kioskSearch').value='';
+    document.getElementById('kiosk-resident-id').value='';
+    document.getElementById('kioskSignSection').style.display='none';
+    document.getElementById('kioskPackageList').innerHTML='<p class="empty-state">Your packages will appear here.</p>';
+  });
 
   // ══════════════════════════════════════════════
   //  FINAL INIT — Trends + Notifications
