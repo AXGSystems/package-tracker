@@ -623,6 +623,10 @@
   // Confirm Pickup
   document.getElementById('confirmPickupBtn').addEventListener('click',()=>{
     if(!selectedIds.size){toast('Select at least one package','error');return;}
+    // Waiver enforcement
+    if(appSettings.waiverEnabled && !document.getElementById('waiverAccepted').checked){
+      toast('You must accept the liability waiver before pickup','error');return;
+    }
     let sigData=null,typedName=null;
     if(sigMode==='draw'){if(isBlank()){toast('Draw your signature or switch to typed name','error');return;}sigData=cv.toDataURL('image/png');}
     else{typedName=document.getElementById('typedSignature').value.trim();if(!typedName){toast('Type your name to confirm','error');return;}}
@@ -643,6 +647,7 @@
     document.getElementById('pk-resident-id').value='';
     document.getElementById('pkResidentSearch').value='';
     document.getElementById('pendingPackagesList').innerHTML='<p class="empty-state">Select a resident to see pending packages.</p>';
+    try{document.getElementById('waiverAccepted').checked=false;}catch(e){}
   });
 
   // ══════════════════════════════════════════════
@@ -2083,6 +2088,108 @@
     document.getElementById('kioskSignSection').style.display='none';
     document.getElementById('kioskPackageList').innerHTML='<p class="empty-state">Your packages will appear here.</p>';
   });
+
+  // ══════════════════════════════════════════════
+  //  SETTINGS + COMPLIANCE
+  // ══════════════════════════════════════════════
+
+  var SETTINGS_KEY = 'pd_settings';
+  var defaultSettings = {
+    reminder1: 24, reminder2: 48, escalateHours: 72,
+    maxRetentionDays: 14, disposalPolicy: 'return',
+    waiverEnabled: true,
+    waiverText: 'By signing above, I acknowledge receipt of the above package(s) and release the property, its management company, and staff from any liability for damage, loss, or misdelivery during storage.',
+    dataRetentionDays: 90, feedbackRetentionDays: 180,
+    pinEnabled: false
+  };
+
+  var appSettings = Object.assign({}, defaultSettings, loadObj(SETTINGS_KEY));
+
+  // Load settings into form
+  function loadSettingsForm() {
+    try {
+      document.getElementById('setReminder1').value = appSettings.reminder1;
+      document.getElementById('setReminder2').value = appSettings.reminder2;
+      document.getElementById('setEscalate').value = appSettings.escalateHours;
+      document.getElementById('setMaxRetention').value = appSettings.maxRetentionDays;
+      document.getElementById('setDisposalPolicy').value = appSettings.disposalPolicy;
+      document.getElementById('setWaiverEnabled').checked = appSettings.waiverEnabled;
+      document.getElementById('setWaiverText').value = appSettings.waiverText;
+      document.getElementById('setDataRetention').value = appSettings.dataRetentionDays;
+      document.getElementById('setFeedbackRetention').value = appSettings.feedbackRetentionDays;
+      document.getElementById('setPinEnabled').checked = appSettings.pinEnabled;
+    } catch(e) {}
+  }
+
+  document.getElementById('saveSettingsBtn').addEventListener('click', function() {
+    appSettings.reminder1 = Number(document.getElementById('setReminder1').value) || 24;
+    appSettings.reminder2 = Number(document.getElementById('setReminder2').value) || 48;
+    appSettings.escalateHours = Number(document.getElementById('setEscalate').value) || 72;
+    appSettings.maxRetentionDays = Number(document.getElementById('setMaxRetention').value) || 14;
+    appSettings.disposalPolicy = document.getElementById('setDisposalPolicy').value;
+    appSettings.waiverEnabled = document.getElementById('setWaiverEnabled').checked;
+    appSettings.waiverText = sanitize(document.getElementById('setWaiverText').value).slice(0, 1000);
+    appSettings.dataRetentionDays = Number(document.getElementById('setDataRetention').value) || 90;
+    appSettings.feedbackRetentionDays = Number(document.getElementById('setFeedbackRetention').value) || 180;
+    appSettings.pinEnabled = document.getElementById('setPinEnabled').checked;
+    save(SETTINGS_KEY, appSettings);
+    // Update waiver text in pickup form
+    var wt = document.getElementById('waiverText');
+    if (wt) wt.textContent = appSettings.waiverText;
+    var wb = document.getElementById('waiverBox');
+    if (wb) wb.style.display = appSettings.waiverEnabled ? 'block' : 'none';
+    toast('Settings saved!', 'success');
+  });
+
+  // Purge old data
+  document.getElementById('purgeOldDataBtn').addEventListener('click', function() {
+    var cutoff = new Date(Date.now() - appSettings.dataRetentionDays * 86400000);
+    var before = packages.length;
+    packages = packages.filter(function(p) {
+      if (p.status === 'picked_up' && p.pickupTime && new Date(p.pickupTime) < cutoff) return false;
+      return true;
+    });
+    var purged = before - packages.length;
+    save(KEYS.packages, packages);
+    // Purge old feedback
+    var fbCutoff = new Date(Date.now() - appSettings.feedbackRetentionDays * 86400000);
+    var fbBefore = feedback.length;
+    feedback = feedback.filter(function(f) { return new Date(f.time) >= fbCutoff; });
+    save(KEYS.feedback, feedback);
+    renderDashboard(); updatePending(); updateAnalytics();
+    toast('Purged ' + purged + ' package records and ' + (fbBefore - feedback.length) + ' feedback entries.', 'success');
+  });
+
+  // JSON backup export
+  document.getElementById('exportBackupBtn').addEventListener('click', function() {
+    var backup = {
+      exportDate: new Date().toISOString(),
+      property: PROPERTY.name,
+      packages: packages,
+      residents: residents,
+      feedback: feedback,
+      shiftNotes: shiftNotes,
+      settings: appSettings
+    };
+    var blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'conciurge-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Backup exported', 'success');
+  });
+
+  // Apply waiver visibility
+  try {
+    var waiverBox = document.getElementById('waiverBox');
+    if (waiverBox) waiverBox.style.display = appSettings.waiverEnabled ? 'block' : 'none';
+    var waiverTextEl = document.getElementById('waiverText');
+    if (waiverTextEl) waiverTextEl.textContent = appSettings.waiverText;
+  } catch(e) {}
+
+  loadSettingsForm();
 
   // ══════════════════════════════════════════════
   //  SERVICE WORKER REGISTRATION

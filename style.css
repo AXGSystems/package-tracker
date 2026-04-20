@@ -1660,6 +1660,61 @@ tbody tr:hover { background: rgba(201,168,76,0.06) !important; }
 .backup-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
 
 /* ══════════════════════════════════════════════
+   SETTINGS + COMPLIANCE
+   ══════════════════════════════════════════════ */
+
+.settings-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+.settings-section:last-of-type { border-bottom: none; }
+.settings-section h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  margin-bottom: 0.15rem;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.toggle-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--maroon);
+}
+
+/* Waiver box in pickup flow */
+.waiver-box {
+  margin: 1rem 0;
+  padding: 0.85rem 1rem;
+  background: var(--bg-warm);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--maroon);
+  border-radius: var(--r-xs);
+}
+.waiver-text {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 0.6rem;
+}
+.waiver-check {
+  font-size: 0.82rem;
+}
+
+/* Settings tab color */
+.tab-btn[data-tab="settings"] { background: rgba(100,100,100,0.06); border-color: rgba(100,100,100,0.1); color: #666; }
+.tab-btn.active[data-tab="settings"] { background: rgba(100,100,100,0.12); border-color: rgba(100,100,100,0.25); box-shadow: 0 4px 20px rgba(100,100,100,0.1), inset 0 1px 0 rgba(255,255,255,0.5); }
+
+/* ══════════════════════════════════════════════
    V2 FEATURES — Scanner, Camera, Kiosk, SMS
    ══════════════════════════════════════════════ */
 

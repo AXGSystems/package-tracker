@@ -102,6 +102,10 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         Residents
       </button>
+      <button class="tab-btn" data-tab="settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </button>
     </nav>
 
     <!-- ═══ TAB CONTENT ═══ -->
@@ -264,6 +268,13 @@
             </div>
             <div id="sigTypeMode" class="sig-mode" style="display:none;">
               <input type="text" id="typedSignature" placeholder="Type full name" class="typed-sig-input">
+            </div>
+            <!-- Liability Waiver -->
+            <div class="waiver-box" id="waiverBox">
+              <p class="waiver-text" id="waiverText">By signing above, I acknowledge receipt of the above package(s) and release the property, its management company, and staff from any liability for damage, loss, or misdelivery during storage.</p>
+              <label class="toggle-label waiver-check">
+                <input type="checkbox" id="waiverAccepted"> I have read and agree to the above terms
+              </label>
             </div>
             <div class="sig-actions">
               <button type="button" class="btn btn-gold btn-lg" id="confirmPickupBtn">
@@ -714,6 +725,99 @@
             </table>
           </div>
           <p class="empty-state" id="resEmpty">No residents added yet.</p>
+        </div>
+      </section>
+
+      <!-- ═══ SETTINGS ═══ -->
+      <section class="tab-panel" id="tab-settings">
+        <div class="panel-card">
+          <h2>Property Settings</h2>
+          <p class="panel-desc">Configure compliance, retention, and operational policies.</p>
+
+          <!-- Retention Policy -->
+          <div class="settings-section">
+            <h3>Package Retention Policy</h3>
+            <p class="chart-subtitle">Auto-escalate unclaimed packages after configured time periods.</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label>First Reminder (hours)</label>
+                <input type="number" id="setReminder1" value="24" min="1" max="168">
+              </div>
+              <div class="form-group">
+                <label>Second Reminder (hours)</label>
+                <input type="number" id="setReminder2" value="48" min="1" max="336">
+              </div>
+              <div class="form-group">
+                <label>Escalate to Manager (hours)</label>
+                <input type="number" id="setEscalate" value="72" min="1" max="720">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Max Retention (days)</label>
+                <input type="number" id="setMaxRetention" value="14" min="1" max="90">
+              </div>
+              <div class="form-group">
+                <label>Disposal Policy</label>
+                <select id="setDisposalPolicy">
+                  <option value="return">Return to carrier</option>
+                  <option value="donate">Donate to charity</option>
+                  <option value="dispose">Dispose per lease terms</option>
+                  <option value="hold">Hold indefinitely</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Liability Waiver -->
+          <div class="settings-section">
+            <h3>Pickup Liability Waiver</h3>
+            <p class="chart-subtitle">Residents must acknowledge this text before completing pickup.</p>
+            <textarea id="setWaiverText" rows="4" style="width:100%;">By signing below, I acknowledge receipt of the above package(s) and release The REMY Apartments, its management company, and staff from any liability for damage, loss, or misdelivery that may have occurred during storage at the front desk. I confirm that I am the intended recipient or authorized to collect on their behalf.</textarea>
+            <div class="form-row" style="margin-top:0.75rem;">
+              <div class="form-group" style="flex:0;">
+                <label class="toggle-label">
+                  <input type="checkbox" id="setWaiverEnabled" checked> Require waiver on pickup
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Retention / Purge -->
+          <div class="settings-section">
+            <h3>Data Retention &amp; Purge</h3>
+            <p class="chart-subtitle">Auto-purge old records to comply with data retention policies.</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Keep picked-up records for (days)</label>
+                <input type="number" id="setDataRetention" value="90" min="30" max="365">
+              </div>
+              <div class="form-group">
+                <label>Keep feedback for (days)</label>
+                <input type="number" id="setFeedbackRetention" value="180" min="30" max="365">
+              </div>
+            </div>
+            <div class="form-row">
+              <button class="btn btn-outline" id="purgeOldDataBtn">Purge Records Older Than Retention Period</button>
+              <button class="btn btn-outline" id="exportBackupBtn">Export Full Backup (JSON)</button>
+            </div>
+          </div>
+
+          <!-- PIN / Verification -->
+          <div class="settings-section">
+            <h3>Pickup Verification</h3>
+            <p class="chart-subtitle">Require PIN or photo ID verification on package pickup.</p>
+            <div class="form-row">
+              <div class="form-group" style="flex:0;">
+                <label class="toggle-label">
+                  <input type="checkbox" id="setPinEnabled"> Enable PIN verification for kiosk self-pickup
+                </label>
+              </div>
+            </div>
+            <p class="chart-subtitle" style="margin-top:0.5rem;">When enabled, residents set a 4-digit PIN on their profile. They must enter it at the kiosk to collect packages.</p>
+          </div>
+
+          <button class="btn btn-gold btn-lg" id="saveSettingsBtn" style="margin-top:1rem;">Save Settings</button>
         </div>
       </section>
 
