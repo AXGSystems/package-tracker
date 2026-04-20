@@ -350,6 +350,7 @@
     document.querySelectorAll('.carrier-btn').forEach(x=>x.classList.remove('selected'));
     b.classList.add('selected'); logCarrier=b.dataset.carrier;
     prefs.carrier=logCarrier; save(KEYS.prefs,prefs);
+    if(document.getElementById('log-resident-id').value) updateFormProgress(3);
   });
 
   // Size toggle
@@ -381,7 +382,8 @@
     document.getElementById('logAptValue').textContent = res.apartment;
     document.getElementById('logAptDisplay').style.display = 'flex';
     document.getElementById('logSubmit').disabled = false;
-    document.getElementById('submitHint').classList.add('hidden');
+    var hint=document.getElementById('submitHint'); hint.textContent='Ready to log!'; hint.classList.add('ready');
+    updateFormProgress(2);
   });
 
   document.getElementById('clearResident').addEventListener('click',()=>{
@@ -389,11 +391,20 @@
     document.getElementById('residentSearch').value='';
     document.getElementById('logAptDisplay').style.display='none';
     document.getElementById('logSubmit').disabled=true;
-    document.getElementById('submitHint').classList.remove('hidden');
+    var h=document.getElementById('submitHint'); h.textContent='Select a resident above to enable logging'; h.classList.remove('ready');
   });
 
   // Submit
   let isSubmitting = false;
+
+  function updateFormProgress(step) {
+    document.querySelectorAll('.progress-step').forEach(function(el) {
+      var s = Number(el.dataset.step);
+      el.classList.remove('active','done');
+      if (s < step) el.classList.add('done');
+      else if (s === step) el.classList.add('active');
+    });
+  }
 
   function resetLogForm() {
     document.getElementById('log-resident-id').value = '';
@@ -410,8 +421,9 @@
     var btn = document.getElementById('logSubmit');
     btn.disabled = true;
     btn.classList.remove('btn-loading');
-    document.getElementById('submitHint').classList.remove('hidden');
+    var rh=document.getElementById('submitHint'); rh.textContent='Select a resident above to enable logging'; rh.classList.remove('ready');
     isSubmitting = false;
+    updateFormProgress(1);
   }
 
   document.getElementById('logForm').addEventListener('submit', function(e) {
@@ -1800,8 +1812,19 @@
   // ══════════════════════════════════════════════
 
   var scannerStream = null;
+  var hasCameraAPI = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  var hasBarcodeAPI = ('BarcodeDetector' in window);
+
+  // Disable scanner button if no camera available
+  if (!hasCameraAPI) {
+    var scanBtn = document.getElementById('scanBarcodeBtn');
+    scanBtn.disabled = true;
+    scanBtn.title = 'Camera not available on this device';
+    scanBtn.style.opacity = '0.3';
+  }
 
   document.getElementById('scanBarcodeBtn').addEventListener('click', function() {
+    if (!hasCameraAPI) { toast('Camera not available on this device or requires HTTPS', 'warning'); return; }
     var view = document.getElementById('scannerView');
     var video = document.getElementById('scannerVideo');
     if (view.style.display !== 'none') { stopScanner(); return; }
@@ -1826,7 +1849,7 @@
             }).catch(function(){});
           }, 500);
         } else {
-          toast('Camera active — BarcodeDetector not supported in this browser. Type tracking # manually.', 'info');
+          toast('Camera active but auto-scan not supported in this browser. Use Chrome on iPad for auto-scan, or type the number.', 'info');
         }
       })
       .catch(function(err) {

@@ -505,6 +505,63 @@ input:focus, select:focus {
 .btn-lg { padding: 0.85rem 1.5rem; font-size: 1rem; min-height: 54px; }
 .btn-xl { padding: 1rem 2rem; font-size: 1.1rem; min-height: 58px; width: 100%; border-radius: var(--r); }
 
+/* ── Form Progress Steps ── */
+.form-progress {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.progress-step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: rgba(0,0,0,0.02);
+  border-radius: var(--r-xs);
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.progress-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.progress-step.active {
+  color: var(--maroon);
+  background: var(--maroon-bg);
+}
+
+.progress-step.active .progress-num {
+  background: var(--maroon);
+  color: white;
+}
+
+.progress-step.done {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+.progress-step.done .progress-num {
+  background: var(--success);
+  color: white;
+}
+
 /* logSubmit:disabled styles in METALLIC MAROON section */
 
 /* ══════════════════════════════════════════════
@@ -726,10 +783,23 @@ input:focus, select:focus {
 }
 
 #logSubmit:disabled {
-  opacity: 0.55;
+  background: rgba(0,0,0,0.04) !important;
+  color: var(--text-dim) !important;
+  border-color: rgba(0,0,0,0.06) !important;
   cursor: not-allowed;
   transform: none !important;
   box-shadow: none !important;
+  pointer-events: none;
+}
+
+/* Enabled state — make it POP */
+#logSubmit:not(:disabled) {
+  animation: readyPulse 2s ease-in-out infinite;
+}
+
+@keyframes readyPulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(124,45,61,0.08), inset 0 1px 0 rgba(255,255,255,0.4); }
+  50% { box-shadow: 0 4px 24px rgba(124,45,61,0.2), 0 0 12px rgba(124,45,61,0.08), inset 0 1px 0 rgba(255,255,255,0.4); }
 }
 
 /* ── PLFR 1: Submit button loading state ── */
@@ -752,12 +822,18 @@ input:focus, select:focus {
 /* Submit progress hint */
 .submit-hint {
   text-align: center;
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 0.78rem;
+  color: var(--text-muted);
   margin-top: 0.5rem;
-  transition: opacity 0.2s;
+  transition: all 0.3s;
+  padding: 0.4rem;
+  border-radius: var(--r-xs);
 }
-.submit-hint.hidden { opacity: 0; }
+.submit-hint.ready {
+  color: var(--success);
+  font-weight: 700;
+  background: var(--success-bg);
+}
 
 /* ── PLFR 2: Notification drawer animation ── */
 .notif-drawer {

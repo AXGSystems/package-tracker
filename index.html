@@ -111,7 +111,12 @@
       <section class="tab-panel active" id="tab-log">
         <div class="panel-card">
           <h2>Log Package</h2>
-          <p class="panel-desc">Tap through — resident, carrier, size, done.</p>
+          <div class="form-progress" id="formProgress">
+            <div class="progress-step active" data-step="1"><span class="progress-num">1</span> Resident</div>
+            <div class="progress-step" data-step="2"><span class="progress-num">2</span> Carrier</div>
+            <div class="progress-step" data-step="3"><span class="progress-num">3</span> Details</div>
+            <div class="progress-step" data-step="4"><span class="progress-num">4</span> Log</div>
+          </div>
           <form id="logForm" autocomplete="off">
             <label class="field-label">Who's it for?</label>
             <div class="resident-search-wrap">
