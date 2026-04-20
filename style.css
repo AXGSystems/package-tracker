@@ -1660,6 +1660,89 @@ tbody tr:hover { background: rgba(201,168,76,0.06) !important; }
 .backup-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
 
 /* ══════════════════════════════════════════════
+   TRACKING LOOKUP
+   ══════════════════════════════════════════════ */
+
+.tracking-lookup-input {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tracking-result { min-height: 100px; }
+
+.tracking-timeline {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.tracking-event {
+  position: relative;
+  padding: 0.5rem 0 0.5rem 1rem;
+  border-left: 2px solid rgba(0,0,0,0.08);
+  margin-left: 0;
+  font-size: 0.85rem;
+}
+
+.tracking-event:first-child { border-color: var(--success); }
+
+.tracking-event::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 0.7rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--glass-border);
+  border: 2px solid var(--white);
+}
+
+.tracking-event:first-child::before {
+  background: var(--success);
+  box-shadow: 0 0 6px rgba(22,163,74,0.3);
+}
+
+.tracking-event-status {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tracking-event-detail {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.tracking-event-time {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.tracking-status-badge {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.tracking-status-delivered { background: var(--success-bg); color: var(--success); border: 1px solid rgba(22,163,74,0.15); }
+.tracking-status-transit { background: var(--blue-bg); color: var(--blue); border: 1px solid rgba(30,95,179,0.15); }
+.tracking-status-exception { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(220,38,38,0.15); }
+.tracking-status-pending { background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(217,119,6,0.15); }
+
+.track-link {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--blue);
+  text-decoration: none;
+  cursor: pointer;
+}
+.track-link:hover { text-decoration: underline; }
+
+/* ══════════════════════════════════════════════
    SETTINGS + COMPLIANCE
    ══════════════════════════════════════════════ */
 

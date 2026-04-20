@@ -41,6 +41,8 @@ function doPost(e) {
         return getResidents();
       case 'validateLicense':
         return validateLicense(body);
+      case 'trackPackage':
+        return trackPackage(body);
       default:
         return jsonResponse({ error: 'Unknown action' });
     }
@@ -272,6 +274,64 @@ function sendNotification(data) {
     return jsonResponse({ success: true, action: 'sendNotification' });
   } catch (err) {
     return jsonResponse({ success: false, error: err.message });
+  }
+}
+
+// ══════════════════════════════════════════════
+//  EASYPOST TRACKING INTEGRATION
+// ══════════════════════════════════════════════
+// Get your free API key at https://www.easypost.com
+// 120,000 free trackings for new accounts
+
+const EASYPOST_API_KEY = ''; // Paste your EasyPost API key here
+
+function trackPackage(body) {
+  if (!EASYPOST_API_KEY) {
+    return jsonResponse({ error: 'Tracking API not configured', tracking: null });
+  }
+
+  try {
+    const trackingNumber = body.trackingNumber;
+    const carrier = body.carrier || ''; // Optional — EasyPost can auto-detect
+
+    // Create tracker via EasyPost API
+    const payload = { tracker: { tracking_code: trackingNumber } };
+    if (carrier) payload.tracker.carrier = carrier.toLowerCase();
+
+    const response = UrlFetchApp.fetch('https://api.easypost.com/v2/trackers', {
+      method: 'post',
+      headers: {
+        'Authorization': 'Basic ' + Utilities.base64Encode(EASYPOST_API_KEY + ':'),
+        'Content-Type': 'application/json'
+      },
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    });
+
+    const data = JSON.parse(response.getContentText());
+
+    if (data.error) {
+      return jsonResponse({ error: data.error.message, tracking: null });
+    }
+
+    return jsonResponse({
+      tracking: {
+        carrier: data.carrier,
+        status: data.status,
+        status_detail: data.status_detail,
+        est_delivery_date: data.est_delivery_date,
+        tracking_details: (data.tracking_details || []).map(function(td) {
+          return {
+            message: td.message,
+            status: td.status,
+            datetime: td.datetime,
+            tracking_location: td.tracking_location
+          };
+        })
+      }
+    });
+  } catch (err) {
+    return jsonResponse({ error: err.message, tracking: null });
   }
 }
 

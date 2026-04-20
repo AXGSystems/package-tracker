@@ -308,6 +308,10 @@
                 <option value="overdue">Overdue 48h+</option>
                 <option value="lost">Lost/Missing</option>
               </select>
+              <button class="btn btn-outline" id="trackPackageBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Track
+              </button>
               <button class="btn btn-outline" id="exportCsvBtn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Export
@@ -317,7 +321,7 @@
           <div class="table-wrapper">
             <table id="packageTable">
               <thead><tr>
-                <th>ID</th><th>Delivered</th><th>Time</th><th>Resident</th><th>Apt</th><th>Carrier</th><th>Size</th><th>Notes</th><th>Staff</th><th>Status</th><th>Pickup</th><th>Time</th><th>Signed</th><th></th>
+                <th>ID</th><th>Delivered</th><th>Time</th><th>Resident</th><th>Apt</th><th>Carrier</th><th>Size</th><th>Tracking</th><th>Notes</th><th>Staff</th><th>Status</th><th>Pickup</th><th>Time</th><th>Signed</th><th></th>
               </tr></thead>
               <tbody id="packageTableBody"></tbody>
             </table>
@@ -610,6 +614,23 @@
           </button>
         </div>
       </section>
+
+      <!-- ═══ TRACKING LOOKUP MODAL ═══ -->
+      <div class="modal-overlay" id="trackingModal" style="display:none;">
+        <div class="modal-card" style="max-width:520px;">
+          <div class="tile-detail-header">
+            <h3>Package Tracking</h3>
+            <button class="btn btn-outline" id="trackingModalClose" style="min-height:36px;padding:0.3rem 0.6rem;">&times;</button>
+          </div>
+          <div class="tracking-lookup-input">
+            <input type="text" id="trackingLookupNum" placeholder="Enter tracking number" style="flex:1;">
+            <button class="btn btn-gold" id="trackingLookupBtn">Track</button>
+          </div>
+          <div id="trackingResult" class="tracking-result">
+            <p class="empty-state" style="padding:1rem;">Enter a tracking number above to look up status.</p>
+          </div>
+        </div>
+      </div>
 
       <!-- ═══ TILE DETAIL MODAL ═══ -->
       <div class="modal-overlay" id="tileDetailModal" style="display:none;">

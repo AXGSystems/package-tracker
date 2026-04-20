@@ -22,7 +22,11 @@
     enableKiosk: true,
     enableFeedback: true,
     sheetsApiUrl: '',
-    twilioEnabled: false
+    twilioEnabled: false,
+    // EasyPost tracking — get your free API key at easypost.com
+    // Put the key in sheets-backend.gs (server-side only, never in client JS)
+    trackingEnabled: false,
+    trackingProvider: 'easypost' // 'easypost', 'aftership', or 'direct'
   };
 
   var SHEETS_API_URL = PROPERTY.sheetsApiUrl;
@@ -741,6 +745,7 @@
         <td>${fmtDate(p.checkinTime)}</td><td>${fmtTime(p.checkinTime)}</td>
         <td>${esc(p.residentName)}</td><td>${esc(p.apartment)}</td>
         <td>${esc(p.carrier)}</td><td>${esc(p.size)}</td>
+        <td>${p.tracking?'<span class="track-link" onclick="openTracking(\''+esc(p.tracking)+'\')">'+esc(p.tracking.length>15?p.tracking.slice(0,15)+'...':p.tracking)+'</span>':'—'}</td>
         <td>${esc(p.notes||'—')}</td><td>${esc(p.loggedBy)}</td>
         <td><span class="status-badge ${sc}">${st}</span></td>
         <td>${p.pickupTime?fmtDate(p.pickupTime):'—'}</td><td>${p.pickupTime?fmtTime(p.pickupTime):'—'}</td>
@@ -2088,6 +2093,158 @@
     document.getElementById('kioskSignSection').style.display='none';
     document.getElementById('kioskPackageList').innerHTML='<p class="empty-state">Your packages will appear here.</p>';
   });
+
+  // ══════════════════════════════════════════════
+  //  TRACKING INTEGRATION
+  // ══════════════════════════════════════════════
+
+  // Carrier tracking URLs (direct links for when API isn't connected)
+  var CARRIER_TRACK_URLS = {
+    'Amazon': 'https://www.amazon.com/gp/your-account/order-history',
+    'USPS': 'https://tools.usps.com/go/TrackConfirmAction?tLabels=',
+    'UPS': 'https://www.ups.com/track?tracknum=',
+    'FedEx': 'https://www.fedex.com/fedextrack/?trknbr=',
+    'DHL': 'https://www.dhl.com/us-en/home/tracking/tracking-parcel.html?submit=1&tracking-id=',
+    'OnTrac': 'https://www.ontrac.com/tracking?number='
+  };
+
+  function getTrackingUrl(carrier, trackingNum) {
+    var base = CARRIER_TRACK_URLS[carrier];
+    if (!base) return null;
+    if (carrier === 'Amazon') return base; // Amazon doesn't use tracking URLs the same way
+    return base + encodeURIComponent(trackingNum);
+  }
+
+  // Open tracking modal
+  document.getElementById('trackPackageBtn').addEventListener('click', function() {
+    document.getElementById('trackingLookupNum').value = '';
+    document.getElementById('trackingResult').innerHTML = '<p class="empty-state" style="padding:1rem;">Enter a tracking number above to look up status.</p>';
+    document.getElementById('trackingModal').style.display = 'flex';
+  });
+
+  document.getElementById('trackingModalClose').addEventListener('click', function() {
+    document.getElementById('trackingModal').style.display = 'none';
+  });
+
+  document.getElementById('trackingModal').addEventListener('click', function(e) {
+    if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+  });
+
+  // Track button click
+  document.getElementById('trackingLookupBtn').addEventListener('click', function() {
+    var num = document.getElementById('trackingLookupNum').value.trim();
+    if (!num) { toast('Enter a tracking number', 'error'); return; }
+    lookupTracking(num);
+  });
+
+  document.getElementById('trackingLookupNum').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('trackingLookupBtn').click();
+  });
+
+  function lookupTracking(trackingNum) {
+    var result = document.getElementById('trackingResult');
+    result.innerHTML = '<p style="text-align:center;padding:1.5rem;color:var(--text-muted);">Looking up tracking...</p>';
+
+    // Try to find this tracking number in our packages
+    var pkg = packages.find(function(p) { return p.tracking === trackingNum; });
+
+    if (SHEETS_ENABLED && PROPERTY.trackingEnabled) {
+      // Use server-side API via Apps Script
+      sync('trackPackage', { trackingNumber: trackingNum }).then(function(data) {
+        if (data && data.tracking) {
+          renderTrackingResult(result, data.tracking, pkg);
+        } else {
+          renderOfflineTracking(result, trackingNum, pkg);
+        }
+      }).catch(function() {
+        renderOfflineTracking(result, trackingNum, pkg);
+      });
+    } else {
+      // No API connected — show what we know + carrier link
+      renderOfflineTracking(result, trackingNum, pkg);
+    }
+  }
+
+  function renderOfflineTracking(container, trackingNum, pkg) {
+    var carrier = pkg ? pkg.carrier : detectCarrier(trackingNum);
+    var url = getTrackingUrl(carrier, trackingNum);
+    var html = '';
+
+    if (pkg) {
+      var statusClass = pkg.status === 'picked_up' ? 'delivered' : pkg.status === 'lost' ? 'exception' : 'pending';
+      html += '<div class="tracking-status-badge tracking-status-' + statusClass + '">' +
+        (pkg.status === 'picked_up' ? 'Picked Up' : pkg.status === 'lost' ? 'Lost' : 'At Front Desk') + '</div>';
+      html += '<div style="margin-bottom:1rem;">';
+      html += '<div class="chart-back-metric"><span>Resident</span><strong>' + esc(pkg.residentName) + ' (Apt ' + esc(pkg.apartment) + ')</strong></div>';
+      html += '<div class="chart-back-metric"><span>Carrier</span><strong>' + esc(pkg.carrier) + '</strong></div>';
+      html += '<div class="chart-back-metric"><span>Size</span><strong>' + esc(pkg.size) + '</strong></div>';
+      html += '<div class="chart-back-metric"><span>Delivered to Desk</span><strong>' + fmtFull(pkg.checkinTime) + '</strong></div>';
+      if (pkg.pickupTime) html += '<div class="chart-back-metric"><span>Picked Up</span><strong>' + fmtFull(pkg.pickupTime) + '</strong></div>';
+      if (pkg.notes) html += '<div class="chart-back-metric"><span>Notes</span><strong>' + esc(pkg.notes) + '</strong></div>';
+      html += '</div>';
+    } else {
+      html += '<div class="tracking-status-badge tracking-status-transit">Not in System</div>';
+      html += '<p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem;">This tracking number is not logged in ConciURGE. It may not have been delivered yet.</p>';
+    }
+
+    if (url) {
+      html += '<a href="' + url + '" target="_blank" class="btn btn-outline" style="width:100%;justify-content:center;">';
+      html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+      html += ' Track on ' + esc(carrier) + ' Website</a>';
+    }
+
+    if (!PROPERTY.trackingEnabled) {
+      html += '<div class="chart-back-insight" style="margin-top:1rem;">Real-time carrier tracking available when EasyPost API is connected. Go to Settings or contact AXG Systems.</div>';
+    }
+
+    container.innerHTML = html;
+  }
+
+  function renderTrackingResult(container, data, pkg) {
+    var html = '';
+    var statusClass = 'transit';
+    if (data.status === 'delivered') statusClass = 'delivered';
+    else if (data.status === 'error' || data.status === 'failure') statusClass = 'exception';
+
+    html += '<div class="tracking-status-badge tracking-status-' + statusClass + '">' + esc(data.status_detail || data.status) + '</div>';
+
+    if (data.tracking_details && data.tracking_details.length) {
+      html += '<div class="tracking-timeline">';
+      data.tracking_details.reverse().forEach(function(ev) {
+        html += '<div class="tracking-event">';
+        html += '<div class="tracking-event-status">' + esc(ev.message) + '</div>';
+        if (ev.tracking_location) {
+          var loc = [ev.tracking_location.city, ev.tracking_location.state].filter(Boolean).join(', ');
+          if (loc) html += '<div class="tracking-event-detail">' + esc(loc) + '</div>';
+        }
+        if (ev.datetime) html += '<div class="tracking-event-time">' + fmtFull(ev.datetime) + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    container.innerHTML = html;
+  }
+
+  function detectCarrier(num) {
+    if (!num) return 'Other';
+    if (/^TBA/i.test(num)) return 'Amazon';
+    if (/^1Z/i.test(num)) return 'UPS';
+    if (/^94\d{20,}/.test(num) || /^92\d{20,}/.test(num)) return 'USPS';
+    if (/^\d{12,15}$/.test(num)) return 'FedEx';
+    if (/^\d{10}$/.test(num)) return 'DHL';
+    return 'Other';
+  }
+
+  // Add "Track" links to Log Book table — make tracking numbers clickable
+  // (This is handled inside renderDashboard via the onclick on tracking cells)
+
+  // Global function for tracking link clicks in table
+  window.openTracking = function(num) {
+    document.getElementById('trackingLookupNum').value = num;
+    document.getElementById('trackingModal').style.display = 'flex';
+    lookupTracking(num);
+  };
 
   // ══════════════════════════════════════════════
   //  SETTINGS + COMPLIANCE
