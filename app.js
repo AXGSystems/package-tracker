@@ -6,14 +6,36 @@
 (function () {
   'use strict';
 
-  // ── CONFIG ──
-  const SHEETS_API_URL = '';
-  const SHEETS_ENABLED = SHEETS_API_URL.length > 0;
+  // ══════════════════════════════════════════════
+  //  MULTI-TENANT CONFIG — Change per property
+  // ══════════════════════════════════════════════
+  var PROPERTY = {
+    name: 'The REMY Apartments',
+    community: 'A LIVEBe Community',
+    address: '7730 Harkins Road, Lanham, MD 20706',
+    logo: 'conciurge-logo-sm.png',
+    staff: ['Front Desk', 'Alex M.', 'Jordan T.', 'Sam R.', 'Chris P.', 'Taylor K.'],
+    maxPackagesPerPage: 50,
+    overdueHours: 48,
+    enableBarcode: true,
+    enablePhoto: true,
+    enableKiosk: true,
+    enableFeedback: true,
+    sheetsApiUrl: '',
+    twilioEnabled: false
+  };
+
+  var SHEETS_API_URL = PROPERTY.sheetsApiUrl;
+  var SHEETS_ENABLED = SHEETS_API_URL.length > 0;
+  var DASH_PAGE_SIZE_CONFIG = PROPERTY.maxPackagesPerPage;
 
   // ── DATA ──
   const KEYS = { residents:'pd_residents', packages:'pd_packages', prefs:'pd_prefs', shiftNotes:'pd_shiftnotes', feedback:'pd_feedback' };
   function load(k)    { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } }
-  function save(k, d) { localStorage.setItem(k, JSON.stringify(d)); }
+  function save(k, d) {
+    try { localStorage.setItem(k, JSON.stringify(d)); }
+    catch(e) { if(e.name==='QuotaExceededError') toast('Storage full! Export CSV and clear old data.','error'); }
+  }
   function loadObj(k)  { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch { return {}; } }
 
   let residents  = load(KEYS.residents);
@@ -39,7 +61,14 @@
   function hoursAgo(h){ return new Date(Date.now()-h*3600000).toISOString(); }
   function daysAgo(d) { return new Date(Date.now()-d*86400000).toISOString(); }
   function hBetween(a,b){ return Math.abs(new Date(b)-new Date(a))/3600000; }
-  function esc(s){ const e=document.createElement('span'); e.textContent=s; return e.innerHTML; }
+  function esc(s){
+    if(s===null||s===undefined) return '';
+    var e=document.createElement('span');
+    e.textContent=String(s);
+    return e.innerHTML;
+  }
+  // Sanitize any string that might contain HTML — strip all tags
+  function sanitize(s){ return String(s||'').replace(/<[^>]*>/g,''); }
 
   // ── TOAST ──
   function toast(msg, type='info') {
@@ -268,15 +297,19 @@
 
   document.getElementById('resTableSearch').addEventListener('input', e => renderResidents(e.target.value));
 
-  document.getElementById('residentForm').addEventListener('submit', e => {
+  document.getElementById('residentForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    const name=document.getElementById('res-name').value.trim(), apt=document.getElementById('res-apt').value.trim();
-    const email=document.getElementById('res-email').value.trim(), phone=document.getElementById('res-phone').value.trim();
-    if(!name||!apt)return;
-    if(residents.some(r=>r.apartment===apt)){toast('Apt '+apt+' already has a resident.','error');return;}
-    const res={id:crypto.randomUUID(),name,apartment:apt,email:email||null,phone:phone||null};
-    residents.push(res); save(KEYS.residents,residents); renderResidents();
-    sync('addResident',{resident:res}); e.target.reset(); toast(`${name} added to Apt ${apt}`,'success');
+    var name = sanitize(document.getElementById('res-name').value.trim()).slice(0, 100);
+    var apt = sanitize(document.getElementById('res-apt').value.trim()).slice(0, 10);
+    var email = sanitize(document.getElementById('res-email').value.trim()).slice(0, 100);
+    var phone = sanitize(document.getElementById('res-phone').value.trim()).slice(0, 20);
+    if (!name || !apt) { toast('Name and apartment are required', 'error'); return; }
+    if (name.length < 2) { toast('Name too short', 'error'); return; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Invalid email format', 'error'); return; }
+    if (residents.some(function(r){return r.apartment===apt;})) { toast('Apt ' + apt + ' already has a resident.', 'error'); return; }
+    var res = { id: crypto.randomUUID(), name: name, apartment: apt, email: email || null, phone: phone || null };
+    residents.push(res); save(KEYS.residents, residents); renderResidents();
+    sync('addResident', { resident: res }); e.target.reset(); toast(name + ' added to Apt ' + apt, 'success');
   });
 
   // ── CSV IMPORT ──
@@ -660,21 +693,31 @@
   //  DASHBOARD
   // ══════════════════════════════════════════════
 
-  function renderDashboard(){
-    const tbody=document.getElementById('packageTableBody'), empty=document.getElementById('dashEmpty');
-    const filter=document.getElementById('dashFilter').value, search=document.getElementById('dashSearch').value.toLowerCase();
-    let data=[...packages];
-    if(filter==='pending')data=data.filter(p=>p.status==='pending');
-    if(filter==='picked_up')data=data.filter(p=>p.status==='picked_up');
-    if(filter==='overdue')data=data.filter(p=>p.status==='pending'&&hBetween(p.checkinTime,new Date().toISOString())>=48);
-    if(filter==='lost')data=data.filter(p=>p.status==='lost');
-    if(search)data=data.filter(p=>p.residentName.toLowerCase().includes(search)||p.apartment.toLowerCase().includes(search)||p.carrier.toLowerCase().includes(search)||(p.tracking||'').toLowerCase().includes(search)||(p.notes||'').toLowerCase().includes(search)||String(p.id).includes(search));
-    data.sort((a,b)=>new Date(b.checkinTime)-new Date(a.checkinTime));
+  var dashPage = 0;
+  var DASH_PAGE_SIZE = PROPERTY.maxPackagesPerPage || 50;
 
-    if(!data.length){tbody.innerHTML='';empty.style.display='block';empty.textContent=packages.length?'No matches.':'No packages logged yet.';return;}
+  function renderDashboard(){
+    var tbody=document.getElementById('packageTableBody'), empty=document.getElementById('dashEmpty');
+    var filter=document.getElementById('dashFilter').value, search=document.getElementById('dashSearch').value.toLowerCase();
+    var data=[].concat(packages);
+    if(filter==='pending')data=data.filter(function(p){return p.status==='pending';});
+    if(filter==='picked_up')data=data.filter(function(p){return p.status==='picked_up';});
+    if(filter==='overdue')data=data.filter(function(p){return p.status==='pending'&&hBetween(p.checkinTime,new Date().toISOString())>=48;});
+    if(filter==='lost')data=data.filter(function(p){return p.status==='lost';});
+    if(search)data=data.filter(function(p){return p.residentName.toLowerCase().indexOf(search)>=0||p.apartment.toLowerCase().indexOf(search)>=0||p.carrier.toLowerCase().indexOf(search)>=0||(p.tracking||'').toLowerCase().indexOf(search)>=0||(p.notes||'').toLowerCase().indexOf(search)>=0||String(p.id).indexOf(search)>=0;});
+    data.sort(function(a,b){return new Date(b.checkinTime)-new Date(a.checkinTime);});
+
+    if(!data.length){tbody.innerHTML='';empty.style.display='block';empty.textContent=packages.length?'No matches.':'No packages logged yet.';removePagination();return;}
     empty.style.display='none';
 
-    tbody.innerHTML=data.map(p=>{
+    // Pagination
+    var totalPages = Math.ceil(data.length / DASH_PAGE_SIZE);
+    if(dashPage >= totalPages) dashPage = totalPages - 1;
+    if(dashPage < 0) dashPage = 0;
+    var pageData = data.slice(dashPage * DASH_PAGE_SIZE, (dashPage + 1) * DASH_PAGE_SIZE);
+    renderPaginationControls(dashPage, totalPages, data.length);
+
+    tbody.innerHTML=pageData.map(function(p){
       const isOver=p.status==='pending'&&hBetween(p.checkinTime,new Date().toISOString())>=48;
       const isLost=p.status==='lost';
       let sc='status-pending', st='Pending';
@@ -723,8 +766,31 @@
     });});
   }
 
-  document.getElementById('dashFilter').addEventListener('change',renderDashboard);
-  document.getElementById('dashSearch').addEventListener('input',renderDashboard);
+  function renderPaginationControls(page, total, count) {
+    var container = document.getElementById('paginationControls');
+    if(!container) {
+      container = document.createElement('div');
+      container.id = 'paginationControls';
+      container.className = 'pagination-controls';
+      document.getElementById('packageTable').parentElement.after(container);
+    }
+    if(total <= 1) { container.innerHTML = '<span class="pagination-info">' + count + ' packages</span>'; return; }
+    container.innerHTML = '<button class="btn btn-outline pagination-btn" id="pgPrev">&laquo; Prev</button>' +
+      '<span class="pagination-info">Page ' + (page+1) + ' of ' + total + ' (' + count + ' packages)</span>' +
+      '<button class="btn btn-outline pagination-btn" id="pgNext">Next &raquo;</button>';
+    document.getElementById('pgPrev').disabled = (page === 0);
+    document.getElementById('pgNext').disabled = (page >= total - 1);
+    document.getElementById('pgPrev').addEventListener('click', function(){ dashPage--; renderDashboard(); });
+    document.getElementById('pgNext').addEventListener('click', function(){ dashPage++; renderDashboard(); });
+  }
+
+  function removePagination() {
+    var c = document.getElementById('paginationControls');
+    if(c) c.innerHTML = '';
+  }
+
+  document.getElementById('dashFilter').addEventListener('change', function(){ dashPage=0; renderDashboard(); });
+  document.getElementById('dashSearch').addEventListener('input', function(){ dashPage=0; renderDashboard(); });
 
   // CSV Export
   document.getElementById('exportCsvBtn').addEventListener('click',()=>{
@@ -2017,6 +2083,13 @@
     document.getElementById('kioskSignSection').style.display='none';
     document.getElementById('kioskPackageList').innerHTML='<p class="empty-state">Your packages will appear here.</p>';
   });
+
+  // ══════════════════════════════════════════════
+  //  SERVICE WORKER REGISTRATION
+  // ══════════════════════════════════════════════
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(function(e) { console.warn('SW registration failed:', e); });
+  }
 
   // ══════════════════════════════════════════════
   //  FINAL INIT — Trends + Notifications

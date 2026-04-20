@@ -562,6 +562,27 @@ input:focus, select:focus {
   color: white;
 }
 
+/* ── Table Pagination ── */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  margin-top: 0.5rem;
+}
+.pagination-info {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.pagination-btn {
+  min-height: 36px !important;
+  padding: 0.3rem 0.8rem !important;
+  font-size: 0.8rem !important;
+}
+.pagination-btn:disabled { opacity: 0.3; }
+
 /* logSubmit:disabled styles in METALLIC MAROON section */
 
 /* ══════════════════════════════════════════════
