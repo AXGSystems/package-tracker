@@ -1,0 +1,9 @@
+{
+  "name": "conciurge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ConciURGE — REMY package tracker. Locked behind AXG basic auth.",
+  "dependencies": {
+    "@vercel/edge": "^1.2.2"
+  }
+}
